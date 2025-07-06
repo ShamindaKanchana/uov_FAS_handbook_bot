@@ -1,0 +1,30 @@
+# Core dependencies
+python-dotenv>=1.0.0
+PyYAML>=6.0
+pytest>=7.0.0
+
+# PDF Processing
+pypdf2>=3.0.0
+pdfminer.six>=20221105
+
+# Text Processing
+nltk>=3.8.1
+spacy>=3.5.0
+python-Levenshtein>=0.12.2
+
+# Embeddings
+sentence-transformers>=2.2.2
+torch>=2.0.0
+transformers>=4.30.0
+
+# Vector Database
+qdrant-client>=1.6.0
+
+# Web Application
+fastapi>=0.95.0
+uvicorn>=0.22.0
+python-multipart>=0.0.6
+
+# Utilities
+tqdm>=4.65.0
+loguru>=0.7.0

@@ -1,0 +1,21 @@
+# Application Configuration
+app:
+  name: "university_handbook_bot"
+  version: "0.1.0"
+  debug: true
+  log_level: "INFO"
+  host: "0.0.0.0"
+  port: 8000
+
+data:
+  raw_dir: "data/raw"
+  processed_dir: "data/processed"
+  chunks_dir: "data/chunks"
+  max_chunk_size: 1000  # characters
+  chunk_overlap: 200    # characters
+
+qdrant:
+  location: "database/qdrant"
+  collection_name: "handbook_embeddings"
+  vector_size: 768  # Should match the embedding model output size
+  distance: "Cosine"  # Distance metric: Cosine, Euclidean, or Dot
