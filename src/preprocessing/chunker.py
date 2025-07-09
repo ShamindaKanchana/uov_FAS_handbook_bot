@@ -77,6 +77,7 @@ class HandbookChunker:
     def _process_section(self, section: Dict, parent_metadata: Optional[Dict] = None) -> List[DocumentChunk]:
         """
         Process a section and its subsections recursively.
+        Skips empty content and prevents duplicate chunks.
         
         Args:
             section: The section to process
@@ -85,31 +86,59 @@ class HandbookChunker:
         Returns:
             List of document chunks from this section and its children
         """
+        if not section or not isinstance(section, dict):
+            return []
+            
         if parent_metadata is None:
             parent_metadata = {}
             
+        # Skip sections with empty or invalid content
+        content = section.get('content', '')
+        if not content or not isinstance(content, str) or not content.strip():
+            content = None
+        else:
+            content = content.strip()
+            
+        # Skip if no content and no subsections
+        if not content and not section.get('subsections'):
+            return []
+            
         # Create metadata for this section
         metadata = {
-            'section_number': section.get('section_number', ''),
-            'title': section.get('title', ''),
-            'page_start': section.get('page_start', 0),
+            'section_number': str(section.get('section_number', '')).strip(),
+            'title': str(section.get('title', '')).strip(),
+            'page_start': int(section.get('page_start', 0)),
             'source': 'handbook',
             **parent_metadata
         }
         
         chunks = []
+        seen_chunks = set()  # Track seen content to prevent duplicates
         
-        # Process the section's own content
-        content = section.get('content', '').strip()
+        # Process the section's own content if it exists
         if content:
-            # Create chunks from the content
-            content_chunks = self._split_into_chunks(content, metadata)
-            chunks.extend(content_chunks)
+            # Clean the content first
+            content = self._clean_chunk_text(content)
+            if content:  # Only process if we have valid content after cleaning
+                # Create chunks from the content
+                content_chunks = self._split_into_chunks(content, metadata)
+                # Filter out empty or duplicate chunks
+                for chunk in content_chunks:
+                    chunk_text = chunk.content.strip()
+                    if chunk_text and chunk_text not in seen_chunks:
+                        seen_chunks.add(chunk_text)
+                        chunks.append(chunk)
         
         # Process subsections
         for subsection in section.get('subsections', []):
-            subsection_chunks = self._process_section(subsection, metadata)
-            chunks.extend(subsection_chunks)
+            if subsection:  # Only process non-empty subsections
+                subsection_chunks = self._process_section(subsection, metadata)
+                # Filter out empty or duplicate chunks
+                for chunk in subsection_chunks:
+                    chunk_text = chunk.content.strip()
+                    if chunk_text and chunk_text not in seen_chunks:
+                        seen_chunks.add(chunk_text)
+                        chunks.append(chunk)
             
         return chunks
     
@@ -126,66 +155,194 @@ class HandbookChunker:
         Returns:
             Position to end the current chunk
         """
-        # If we're near the end of the text, just return the end
-        if max_end >= len(text) - 1:
-            return len(text)
+        if not text or max_end >= len(text) - 1:
+            return len(text) if text else start
             
         # Look for paragraph breaks first (double newlines)
         para_break = text.rfind('\n\n', start, max_end)
-        if para_break > start and (max_end - para_break) < 100:  # If close to a paragraph break
+        if para_break > start and (max_end - para_break) < 100:
             return para_break + 2
             
-        # Look for sentence boundaries in the last 40% of the chunk
-        look_behind = max(start, max_end - int(self.chunk_size * 0.4))
+        # Look for sentence boundaries in the last 30% of the chunk
+        look_behind = max(start, max_end - int(self.chunk_size * 0.3))
         
-        # Try different boundary markers in order of preference
+        # Common sentence endings with proper spacing
+        sentence_enders = ['. ', '! ', '? ', '".', '!"', '?"', '.\n', '!\n', '?\n']
+        
+        # Check for sentence boundaries first
+        for ender in sentence_enders:
+            pos = text.rfind(ender, look_behind, max_end)
+            if pos > start + (self.chunk_size // 2):
+                # Skip common abbreviations and decimal points
+                if ender in ['. ', '! ', '? ']:
+                    prev_word = text[max(0, pos-10):pos].split()[-1].lower() if pos > 10 else ''
+                    if any(prev_word.endswith(abbr) for abbr in ['dr', 'mr', 'mrs', 'ms', 'phd', 'etc', 'fig', 'no', 'vol', 'inc']):
+                        continue
+                    # Skip decimal points in numbers
+                    if pos > 0 and text[pos-1].isdigit():
+                        continue
+                return pos + len(ender)
+        
+        # Try other meaningful boundaries
         boundaries = [
-            ('. ', 2),    # Sentence end with space
-            ('! ', 2),    # Exclamation with space
-            ('? ', 2),    # Question with space
-            ('.\n', 2),  # Sentence at end of line
-            ('; ', 2),    # Semicolon with space
-            (': ', 2),    # Colon with space
-            ('\n', 1),   # Single newline
-            (', ', 2),    # Comma with space
-            (' ', 1)      # Space as last resort
+            ('\n', 1),           # Newline
+            ('; ', 2),           # Semicolon
+            (': ', 2),           # Colon
+            (', ', 2),           # Comma
+            (' - ', 3),          # Dash
+            (' (', 2),           # Parenthesis
+            (') ', 2),           # Close parenthesis
+            (' and ', 5),        # Word boundary
+            (' or ', 4),         # Word boundary
+            (' ', 1)             # Space as last resort
         ]
         
         for boundary, offset in boundaries:
             boundary_pos = text.rfind(boundary, look_behind, max_end)
-            # Ensure we don't create chunks that are too small
-            if boundary_pos > start + (self.chunk_size // 2):
-                # Check if this is a false positive (e.g., abbreviations)
-                if boundary in ['. ', '! ', '? ']:
-                    # Skip common abbreviations
-                    prev_word = text[max(0, boundary_pos-10):boundary_pos].split()[-1] if boundary_pos > 10 else ''
-                    if any(prev_word.lower().endswith(abbr) for abbr in ['dr', 'mr', 'mrs', 'ms', 'phd', 'etc', 'fig', 'no']):
-                        continue
+            if boundary_pos > start + (self.chunk_size // 3):  # More flexible minimum chunk size
                 return boundary_pos + offset
         
         # If no good boundary found, try to find a space near the max_end
-        space_pos = text.rfind(' ', max(start, max_end - 50), max_end)
-        if space_pos > start:
+        space_pos = text.rfind(' ', max(start, max_end - 30), max_end)
+        if space_pos > start + (self.chunk_size // 4):  # Ensure minimum chunk size
             return space_pos + 1
             
         # If we can't find a good boundary, return the max_end
         return max_end
     
     def _clean_chunk_text(self, text: str) -> str:
-        """Clean and format chunk text."""
-        # Replace multiple spaces/newlines with a single space
-        text = ' '.join(text.split())
-        # Ensure proper spacing around punctuation
+        """
+        Clean and format chunk text while preserving meaningful structure.
+        Handles special characters, OCR artifacts, and formatting issues.
+        
+        Args:
+            text: Raw text to clean
+            
+        Returns:
+            Cleaned and formatted text, or empty string if text is invalid
+        """
+        if not text or not isinstance(text, str):
+            return ""
+            
+        # Replace common OCR/formatting issues
+        replacements = {
+            # Common OCR artifacts
+            '(cid:136)': '•',  # Bullet points
+            '(cid:13)': '',    # Special characters
+            '\u2022': '•',    # Different bullet point format
+            '\u25cf': '•',    # Another bullet point format
+            '\u2013': '-',    # En dash
+            '\u2014': '--',   # Em dash
+            '\u201c': '"',   # Left double quote
+            '\u201d': '"',   # Right double quote
+            '\u2018': "'",   # Left single quote
+            '\u2019': "'"    # Right single quote
+        }
+        
+        for old, new in replacements.items():
+            text = text.replace(old, new)
+            
+        # Normalize whitespace and newlines (preserve paragraphs)
+        text = re.sub(r'[\r\n]+', '\n', text)  # Normalize newlines
+        text = re.sub(r'[\t\f\v ]+', ' ', text)  # Normalize other whitespace
+        text = re.sub(r'\n\s*\n', '\n\n', text)  # Normalize paragraph breaks
+        
+        # Fix common punctuation and spacing issues
         text = re.sub(r'\s+([.,!?;:])', r'\1', text)  # Remove space before punctuation
-        text = re.sub(r'([.,!?;:])(\S)', r'\1 \2', text)  # Add space after punctuation
-        # Fix common OCR/formatting issues
-        text = text.replace('(cid:136)', '•')  # Convert special bullet points
-        text = re.sub(r'\s*\n\s*', ' ', text)  # Normalize line breaks
+        text = re.sub(r'([.,!?;:])([A-Za-z])', r'\1 \2', text)  # Add space after punctuation
+        
+        # Fix common OCR errors (split words, merged words with numbers, etc.)
+        text = re.sub(r'\b([A-Z])\s+([A-Z])\b', r'\1\2', text)  # Fix split words
+        text = re.sub(r'([a-z])([0-9])', r'\1 \2', text)  # Add space between letter and number
+        text = re.sub(r'([0-9])([A-Za-z])', r'\1 \2', text)  # Add space between number and letter
+        
+        # Remove any remaining control characters except newlines
+        text = re.sub(r'[\x00-\x09\x0B-\x1F\x7F]', '', text)
+        
+        return text.strip()
+        
+        # Ensure sentences end with proper punctuation
+        if text and text[-1] not in {'.', '!', '?', ';', ':'}:
+            text = text.rstrip() + '.'
+            
         return text.strip()
 
+    def _is_meaningful_chunk(self, text: str) -> bool:
+        """
+        Check if a chunk of text is meaningful enough to keep.
+        
+        Args:
+            text: The text to evaluate
+            
+        Returns:
+            bool: True if the text is meaningful, False otherwise
+        """
+        if not text or len(text.strip()) < 50:  # Minimum length
+            return False
+            
+        # Check if the text contains at least one complete sentence
+        if not re.search(r'[.!?]\s+[A-Z]', text):
+            return False
+            
+        # Check for common patterns that indicate incomplete chunks
+        if re.search(r'\b(and|or|but|however|therefore|because|so|if|then|when|where|which|that|who|whom|whose)\s*$', 
+                    text, re.IGNORECASE):
+            return False
+            
+        return True
+        
+    def _find_optimal_boundary(self, text: str, start: int, max_end: int) -> int:
+        """
+        Find the best boundary point to split the text.
+        
+        Args:
+            text: Full text
+            start: Starting position for this chunk
+            max_end: Maximum end position
+            
+        Returns:
+            int: Best end position for the current chunk
+        """
+        # If we're near the end of the text, return the end
+        if max_end >= len(text) - 1:
+            return len(text)
+            
+        # First, try to find a paragraph break
+        para_break = text.rfind('\n\n', start, max_end)
+        if para_break > start and (max_end - para_break) < 150:  # If close to a paragraph break
+            return para_break + 2
+            
+        # Look for sentence boundaries in the last 30% of the chunk
+        look_behind = max(start, max_end - int(self.chunk_size * 0.3))
+        
+        # Try different boundary markers in order of preference
+        boundaries = [
+            ('. ', 2),     # Sentence end with space
+            ('! ', 2),     # Exclamation with space
+            ('? ', 2),     # Question with space
+            ('\n', 1),    # Newline
+            ('; ', 2),     # Semicolon with space
+            (': ', 2),     # Colon with space
+            (', ', 2),     # Comma with space
+            (' ', 1)       # Space as last resort
+        ]
+        
+        for boundary, offset in boundaries:
+            boundary_pos = text.rfind(boundary, look_behind, max_end)
+            if boundary_pos > start + (self.chunk_size // 2):  # Ensure reasonable chunk size
+                return boundary_pos + offset
+                
+        # If no good boundary found, try to find a space near max_end
+        space_pos = text.rfind(' ', max(start, max_end - 50), max_end)
+        if space_pos > start:
+            return space_pos + 1
+            
+        # If we can't find a good boundary, return the max_end
+        return max_end
+        
     def _split_into_chunks(self, text: str, metadata: Dict) -> List[DocumentChunk]:
         """
-        Split text into meaningful chunks with proper boundaries.
+        Split text into meaningful, complete chunks with proper boundaries.
         
         Args:
             text: The text to split
@@ -198,102 +355,84 @@ class HandbookChunker:
             logger.warning("Empty or invalid text provided for chunking")
             return []
             
+        # Clean the entire text first
+        text = self._clean_chunk_text(text)
+        if not text:
+            return []
+            
         chunks = []
         start = 0
         text_length = len(text)
-        min_chunk_size = 50  # Minimum size for a chunk to be considered valid
-        iteration = 0
-        last_progress = 0
+        min_chunk_size = 100  # Minimum size for a chunk to be considered meaningful
         
         logger.info(f"Starting chunking of text with length: {text_length} characters")
         
         try:
-            while (start < text_length - min_chunk_size and 
-                   iteration < self.max_iterations):
+            iteration = 0
+            while start < text_length and iteration < self.max_iterations:
                 iteration += 1
-                
-                # Log progress every 10% or every 100 iterations
-                progress = (start / text_length) * 100
-                if progress >= last_progress + 10 or iteration % 100 == 0:
-                    logger.info(f"Progress: {progress:.1f}% - Created {len(chunks)} chunks so far")
-                    last_progress = int(progress // 10) * 10
                 
                 # Calculate the maximum end position for this chunk
                 max_end = min(start + self.chunk_size, text_length)
                 
-                # Find a meaningful boundary
-                try:
-                    end = self._find_meaningful_boundary(text, start, max_end)
-                    if end <= start:  # Ensure we're making progress
-                        logger.warning(f"No progress made in chunking. Start: {start}, End: {end}")
-                        end = start + min(100, text_length - start - 1)
-                        if end <= start:  # Still no progress, abort
-                            logger.error("Cannot make progress in chunking. Aborting.")
-                            break
-                except Exception as e:
-                    logger.error(f"Error finding boundary: {str(e)}")
-                    break
+                # Find the best boundary
+                end = self._find_meaningful_boundary(text, start, max_end)
                 
-                # Get the chunk text and clean it up
-                chunk_text = self._clean_chunk_text(text[start:end])
+                # Ensure we make progress
+                if end <= start:
+                    logger.warning(f"No progress made, forcing forward progress. Start: {start}, End: {end}")
+                    start = min(start + 100, text_length)
+                    continue
+                
+                # Get the chunk text and clean it
+                chunk_text = text[start:end].strip()
                 
                 # Only add if we have meaningful content
-                if len(chunk_text) >= min_chunk_size:
-                    # Ensure the chunk ends with proper punctuation if needed
-                    if end < text_length and not chunk_text[-1] in {'.', '!', '?', ';', ':'}:
-                        chunk_text = chunk_text.rstrip(',') + '.'
-                    
-                    chunk_id = str(uuid.uuid4())
+                if self._is_meaningful_chunk(chunk_text):
                     chunk_metadata = metadata.copy()
                     chunk_metadata.update({
                         'chunk_number': len(chunks) + 1,
                         'char_start': start,
-                        'char_end': end
+                        'char_end': end,
+                        'is_complete': True,
+                        'word_count': len(chunk_text.split())
                     })
                     
                     chunks.append(DocumentChunk(
-                        id=chunk_id,
+                        id=str(uuid.uuid4()),
                         content=chunk_text,
                         metadata=chunk_metadata
                     ))
                 
-                # Calculate overlap start position (25% of chunk size or 100 chars, whichever is smaller)
-                overlap_size = min(max(self.chunk_size // 4, 100), self.chunk_overlap)
-                overlap_start = max(start, end - overlap_size)
+                # Move start position, accounting for overlap
+                next_start = end - self.chunk_overlap
+                if next_start <= start:  # Ensure we make progress
+                    next_start = start + (self.chunk_size // 2)
+                start = next_start
                 
-                # Find the nearest sentence start in the overlap region
-                try:
-                    sentence_start = text.rfind('. ', overlap_start, end)
-                    if sentence_start > start and (end - sentence_start) < (overlap_size * 1.5):
-                        new_start = sentence_start + 2  # Move past the period and space
-                    else:
-                        # If no good sentence start, just use the overlap start
-                        new_start = overlap_start
-                    
-                    # Ensure we're making progress
-                    if new_start <= start:
-                        logger.warning(f"No progress made in chunk position. Forcing progress. Old: {start}, New: {new_start}")
-                        new_start = start + min(100, text_length - start - 1)
-                        if new_start <= start:  # Still no progress, abort
-                            logger.error("Cannot make progress in chunk position. Aborting.")
-                            break
-                            
-                    start = new_start
-                    
-                except Exception as e:
-                    logger.error(f"Error calculating next chunk start: {str(e)}")
-                    start = end  # Move forward to prevent getting stuck
-                
-                # Safety check to prevent infinite loops
+                # If we're near the end, check if we should include the remaining text
                 if start >= text_length - min_chunk_size:
-                    logger.info("Reached end of text")
+                    remaining_text = text[start:].strip()
+                    if len(remaining_text) >= min_chunk_size // 2:
+                        chunks.append(DocumentChunk(
+                            id=str(uuid.uuid4()),
+                            content=remaining_text,
+                            metadata={
+                                **metadata,
+                                'chunk_number': len(chunks) + 1,
+                                'char_start': start,
+                                'char_end': text_length,
+                                'is_complete': True,
+                                'word_count': len(remaining_text.split())
+                            }
+                        ))
                     break
                     
         except Exception as e:
-            logger.error(f"Unexpected error during chunking: {str(e)}")
+            logger.error(f"Error during chunking: {str(e)}")
             raise
             
-        logger.info(f"Finished chunking. Created {len(chunks)} chunks total.")
+        logger.info(f"Finished chunking. Created {len(chunks)} chunks.")
         return chunks
     
     def chunks_to_qdrant_format(self, chunks: List[DocumentChunk]) -> List[Dict]:

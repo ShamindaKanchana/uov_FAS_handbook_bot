@@ -73,51 +73,97 @@ class TextEmbedder:
             logger.error(f"Error initializing collection: {e}")
             raise
     
-    def _chunk_text(self, text: str, max_length: int = 500) -> List[str]:
-        """Split text into chunks of maximum length, trying to maintain sentence boundaries."""
+    def _chunk_text(self, text: str, max_length: int = 500, min_chunk_size: int = 100) -> List[str]:
+        """
+        Split text into meaningful chunks while preserving sentence boundaries.
+        
+        Args:
+            text: Input text to be chunked
+            max_length: Maximum number of words per chunk
+            min_chunk_size: Minimum number of words per chunk (except possibly the last one)
+            
+        Returns:
+            List of text chunks
+        """
         if not text.strip():
             return []
             
-        # Split into sentences first
-        sentences = re.split(r'(?<=[.!?])\s+', text)
-        chunks = []
-        current_chunk = []
-        current_length = 0
+        # Normalize whitespace
+        text = ' '.join(text.split())
         
-        for sentence in sentences:
-            sentence = sentence.strip()
-            if not sentence:
-                continue
-                
-            sentence_length = len(sentence.split())
+        # First, try to split by paragraphs
+        paragraphs = [p.strip() for p in text.split('\n\n') if p.strip()]
+        
+        chunks = []
+        
+        for para in paragraphs:
+            words = para.split()
             
-            # If sentence is too long, split it
-            if sentence_length > max_length // 2:
-                words = sentence.split()
-                while words:
-                    chunk = []
-                    chunk_length = 0
-                    while words and chunk_length + len(words[0]) <= max_length:
-                        word = words.pop(0)
-                        chunk.append(word)
-                        chunk_length += len(word) + 1  # +1 for space
-                    if chunk:
-                        chunks.append(' '.join(chunk))
+            # If paragraph is small enough, add as is
+            if len(words) <= max_length:
+                chunks.append(para)
                 continue
                 
-            # Add sentence to current chunk if it fits
-            if current_length + sentence_length <= max_length:
+            # Otherwise, try to split at sentence boundaries
+            sentences = re.split(r'(?<=[.!?])\s+', para)
+            current_chunk = []
+            current_length = 0
+            
+            for sentence in sentences:
+                sentence = sentence.strip()
+                if not sentence:
+                    continue
+                    
+                sentence_words = sentence.split()
+                sentence_length = len(sentence_words)
+                
+                # If sentence is too long, we need to split it
+                if sentence_length > max_length:
+                    # Flush current chunk if not empty
+                    if current_chunk:
+                        chunks.append(' '.join(current_chunk))
+                        current_chunk = []
+                        current_length = 0
+                    
+                    # Split the long sentence into chunks
+                    for i in range(0, len(sentence_words), max_length):
+                        chunk = ' '.join(sentence_words[i:i + max_length])
+                        chunks.append(chunk)
+                    continue
+                    
+                # If adding this sentence would make the chunk too long, start a new chunk
+                if current_length + sentence_length > max_length and current_chunk:
+                    chunks.append(' '.join(current_chunk))
+                    current_chunk = []
+                    current_length = 0
+                    
+                # Add sentence to current chunk
                 current_chunk.append(sentence)
                 current_length += sentence_length
-            else:
-                if current_chunk:
-                    chunks.append(' '.join(current_chunk))
-                current_chunk = [sentence]
-                current_length = sentence_length
+            
+            # Add the last chunk if it meets minimum size or is the only chunk
+            if current_chunk and (current_length >= min_chunk_size or not chunks):
+                chunks.append(' '.join(current_chunk))
+        
+        # If we still have chunks that are too small, merge them
+        if len(chunks) > 1:
+            merged_chunks = []
+            current = chunks[0].split()
+            
+            for chunk in chunks[1:]:
+                chunk_words = chunk.split()
+                # If current chunk is small, try to merge with next
+                if len(current) < min_chunk_size and len(current) + len(chunk_words) <= max_length:
+                    current.extend(chunk_words)
+                else:
+                    merged_chunks.append(' '.join(current))
+                    current = chunk_words
+            
+            # Add the last chunk
+            if current:
+                merged_chunks.append(' '.join(current))
                 
-        # Add the last chunk if not empty
-        if current_chunk:
-            chunks.append(' '.join(current_chunk))
+            chunks = merged_chunks
             
         return chunks
 
@@ -570,10 +616,10 @@ def main():
             
             # Example searches
             test_queries = [
-                "admission requirements",
-                "degree programs",
-                "scholarships",
-                "academic calendar"
+                "Subjects belongs to applied mathamatics and computing",
+                "Bio Sience department information",
+                "What are the subjects in IT degree",
+                "What are the subjects in Bio Sience degree"
             ]
             
             for query in test_queries:
