@@ -8,10 +8,7 @@ def main():
     print("-" * 50)
     
     # Initialize the query engine
-    engine = QueryEngine(
-        collection_name="handbook_chunks",
-        storage_path="./qdrant_handbook"
-    )
+    engine = QueryEngine()
     
     while True:
         try:

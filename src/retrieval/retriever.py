@@ -3,7 +3,13 @@ from typing import List, Dict, Any, Optional, Union
 from pathlib import Path
 
 from sentence_transformers import SentenceTransformer
-from qdrant_client import QdrantClient
+
+from src.embedding.config import (
+    DEFAULT_MODEL,
+    DEFAULT_COLLECTION,
+    QDRANT_STORAGE_PATH,
+)
+from src.embedding.qdrant_singleton import QdrantClientSingleton
 from qdrant_client.models import Filter, FieldCondition, MatchValue
 
 # Set up logging
@@ -18,8 +24,11 @@ class QueryEngine:
     A class to handle querying the vector database with enhanced search capabilities.
     """
     
-    def __init__(self, collection_name: str = "handbook_chunks", 
-                 storage_path: Optional[Union[str, Path]] = None):
+    def __init__(
+        self,
+        collection_name: str = DEFAULT_COLLECTION,
+        storage_path: Optional[Union[str, Path]] = QDRANT_STORAGE_PATH,
+    ):
         """
         Initialize the QueryEngine with an existing Qdrant collection.
         
@@ -28,8 +37,8 @@ class QueryEngine:
             storage_path: Path where Qdrant data is stored. If None, uses in-memory storage.
         """
         self.collection_name = collection_name
-        self.model = SentenceTransformer("all-MiniLM-L6-v2")
-        self.client = QdrantClient(path=str(storage_path) if storage_path else None)
+        self.model = SentenceTransformer(DEFAULT_MODEL)
+        self.client = QdrantClientSingleton(storage_path).get_client()
         logger.info(f"Connected to Qdrant collection: {collection_name}")
 
     def _correct_spelling(self, text: str) -> str:
@@ -182,7 +191,7 @@ def test_queries():
     import time
     
     print("Testing Query Engine...")
-    engine = QueryEngine(storage_path="./qdrant_handbook")
+    engine = QueryEngine()
     
     test_cases = [
         "Subjects in IT degree",
