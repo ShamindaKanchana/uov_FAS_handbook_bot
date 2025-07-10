@@ -187,24 +187,46 @@ class PDFParser:
                                 current_subsection["content"] = self._clean_content("\n".join(current_content))
                                 current_content = []
 
-                            # Update current section
+                            # Update current section with de-duplication/accumulation logic
                             if level == 1:  # Main section
-                                current_section = {
-                                    "section_number": sec_num,
-                                    "title": title,
-                                    "subsections": [],
-                                    "page_start": current_page_num
-                                }
-                                content_data["sections"].append(current_section)
+                                # Try to reuse an existing main section if it exists
+                                existing_section = next((s for s in content_data["sections"]
+                                                         if s["section_number"] == sec_num), None)
+                                if existing_section:
+                                    current_section = existing_section
+                                else:
+                                    current_section = {
+                                        "section_number": sec_num,
+                                        "title": title,
+                                        "subsections": [],
+                                        "content": current_section["content"] if "content" in locals() and current_section else "",
+                                        "page_start": current_page_num
+                                    }
+                                    content_data["sections"].append(current_section)
                                 current_subsection = None
                             else:  # Subsection
-                                current_subsection = {
-                                    "section_number": sec_num,
-                                    "title": title,
-                                    "content": "",
-                                    "page_start": current_page_num
-                                }
-                                if current_section:
+                                if current_section is None:
+                                    # Rare edge-case: subsection appears before any main section
+                                    current_section = {
+                                        "section_number": sec_num.split(".")[0],
+                                        "title": "",
+                                        "subsections": [],
+                                        "content": "",
+                                        "page_start": current_page_num
+                                    }
+                                    content_data["sections"].append(current_section)
+                                # Reuse if already present
+                                existing_sub = next((s for s in current_section["subsections"]
+                                                     if s["section_number"] == sec_num), None)
+                                if existing_sub:
+                                    current_subsection = existing_sub
+                                else:
+                                    current_subsection = {
+                                        "section_number": sec_num,
+                                        "title": title,
+                                        "content": "",
+                                        "page_start": current_page_num
+                                    }
                                     current_section["subsections"].append(current_subsection)
                         else:
                             # Add to current content if we're in a section
@@ -219,6 +241,23 @@ class PDFParser:
                     current_subsection["content"] = self._clean_content("\n".join(current_content))
                 elif current_section and current_content:
                     current_section["content"] = self._clean_content("\n".join(current_content))
+
+            # --- prune empty sections & subsections before saving ---
+            def _prune(data: dict, min_chars: int = 50):
+                pruned_sections = []
+                for sec in data.get("sections", []):
+                    # prune subsections first
+                    subsecs = []
+                    for sub in sec.get("subsections", []):
+                        if sub.get("content", "").strip() and len(sub["content"].strip()) >= min_chars:
+                            subsecs.append(sub)
+                    sec["subsections"] = subsecs
+                    # keep section if it has content or at least one subsection
+                    if (sec.get("content", "").strip() and len(sec["content"].strip()) >= min_chars) or subsecs:
+                        pruned_sections.append(sec)
+                data["sections"] = pruned_sections
+                return data
+            content_data = _prune(content_data)
 
             # Save to file if output path is provided
             if output_path:
