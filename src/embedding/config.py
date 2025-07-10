@@ -16,8 +16,8 @@ VECTOR_SIZE = 384
 # Default batch size for processing
 DEFAULT_BATCH_SIZE = 100
 
-# Path to store Qdrant data
-QDRANT_STORAGE_PATH = BASE_DIR / "qdrant_storage"
+# Directory to persist Qdrant data (relative to project root)
+QDRANT_STORAGE_PATH = BASE_DIR / "database" / "qdrant"
 
 # Default distance metric for vector search
 DEFAULT_DISTANCE = "COSINE"
