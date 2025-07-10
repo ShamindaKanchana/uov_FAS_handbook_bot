@@ -43,15 +43,26 @@ A Retrieval-Augmented Generation (RAG) assistant that answers academic questions
 
 ## ⚙️  End-to-End Pipeline
 
-```mermaid
-graph TD
-  A[Handbook PDF] -->|pdf_parser| B[Structured JSON]
-  B -->|chunker| C[JSONL Chunks]
-  C -->|TextEmbedder (MiniLM)| D[Qdrant Collection]
-  subgraph Retrieval
-    E[QueryEngine] --> D
-    E --> F[CLI Bot / LLM]
-  end
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│                 │     │                 │     │                 │
+│  Handbook PDF   ├────►│  PDF Parser     ├────►│  JSON Chunks    │
+│                 │     │  (pdf_parser)   │     │  (chunker)      │
+└─────────────────┘     └─────────────────┘     └────────┬────────┘
+                                                       │
+                                                       ▼
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│                 │     │                 │     │                 │
+│  User Query     ├────►│  Query Engine   │◄────┤  Qdrant DB     │
+│  (CLI/API)      │     │  (retriever)    │     │  (Vectors +     │
+└─────────────────┘     └────────┬────────┘     │   Metadata)     │
+                                 │              └─────────────────┘
+                                 ▼
+                         ┌─────────────────┐
+                         │                 │
+                         │  CLI Bot / LLM  │
+                         │  (Response)     │
+                         └─────────────────┘
 ```
 
 1. **Parsing** – `pdf_parser.py` extracts headings & paragraphs.
