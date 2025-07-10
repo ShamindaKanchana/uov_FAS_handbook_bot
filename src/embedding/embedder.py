@@ -451,10 +451,10 @@ class TextEmbedder:
 
 def load_document_chunks(chunks_path: str) -> list[dict]:
     """
-    Load document chunks from a JSON file.
+    Load document chunks from a JSON or JSONL file.
     
     Args:
-        chunks_path: Path to the JSON file containing document chunks
+        chunks_path: Path to the JSON/JSONL file containing document chunks
         
     Returns:
         List of document chunks in the format expected by TextEmbedder
@@ -471,15 +471,34 @@ def load_document_chunks(chunks_path: str) -> list[dict]:
         raise FileNotFoundError(f"Chunks file not found at {chunks_path}")
     
     logger.info(f"Loading chunks from {chunks_path}")
-    with open(chunks_path, 'r', encoding='utf-8') as f:
-        try:
-            chunks_data = json.load(f)
-            if not isinstance(chunks_data, list):
-                logger.warning(f"Expected a list of chunks, got {type(chunks_data)}. Wrapping in a list.")
-                chunks_data = [chunks_data]  # In case the root is a single chunk
-        except json.JSONDecodeError as e:
-            logger.error(f"Failed to parse JSON from {chunks_path}: {e}")
-            raise
+    # Detect JSONL by extension or fallback if array parsing fails
+    chunks_data = []
+    try:
+        if chunks_path.suffix.lower() == ".jsonl":
+            with open(chunks_path, "r", encoding="utf-8") as f:
+                for line_no, line in enumerate(f, 1):
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        chunks_data.append(json.loads(line))
+                    except json.JSONDecodeError as e:
+                        logger.error(f"JSON decode error at line {line_no}: {e}")
+                        raise
+        else:
+            with open(chunks_path, "r", encoding="utf-8") as f:
+                chunks_data = json.load(f)
+                if not isinstance(chunks_data, list):
+                    logger.warning("Expected a list at root; wrapping single object in list")
+                    chunks_data = [chunks_data]
+    except json.JSONDecodeError:
+        logger.info("Falling back to JSONL parsing after array load failure")
+        with open(chunks_path, "r", encoding="utf-8") as f:
+            for line_no, line in enumerate(f, 1):
+                line = line.strip()
+                if not line:
+                    continue
+                chunks_data.append(json.loads(line))
     
     if not chunks_data:
         logger.warning("No chunks found in the input file")
