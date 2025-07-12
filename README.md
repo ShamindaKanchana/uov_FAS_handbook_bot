@@ -1,53 +1,110 @@
 # University of Vavuniya – Faculty of Applied Science Handbook Bot
 
-A Retrieval-Augmented Generation (RAG) assistant that answers academic questions about programmes, regulations and courses offered by the Faculty of Applied Science (FAS), University of Vavuniya. Instead of combing through the handbook PDF, students can query the bot in plain English and instantly receive relevant excerpts.
+A Retrieval-Augmented Generation (RAG) assistant that answers academic questions about programmes, regulations, and courses offered by the Faculty of Applied Science (FAS), University of Vavuniya. This AI-powered assistant provides instant, accurate responses by combining semantic search with large language models.
 
----
+![Demo](https://img.shields.io/badge/Demo-Available-success) [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 
 ## ✨  Key Features
 
-| Stage | Details |
-| ----- | ------- |
-| **Pre-processing** | PDF → structured JSON (sections, subsections, pages) via `pdf_parser.py`. |
-| **Chunking** | `HandbookChunker` splits long sections into ~350-word overlapping chunks, enriching each with hierarchy & page metadata. |
-| **Embedding** | `all-MiniLM-L6-v2` (Sentence-Transformers, 384-d) with cosine normalisation. |
-| **Vector Store** | [Qdrant](https://qdrant.tech/) – local, file-based, persisted under `database/qdrant/`. |
-| **Retrieval** | `QueryEngine` improves query (spelling fixes, term expansion), embeds it and performs semantic search; results optionally re-ranked. |
-| **CLI Bot** | `python query_handbook.py` interactive shell delivering nicely formatted answers.
+### 🔍 Advanced Retrieval
+- **Semantic Search**: Find relevant information using state-of-the-art embeddings
+- **Context-Aware**: Understands academic context and course structures
+- **Source Attribution**: Every response includes references to the original handbook content
+
+### 🤖 Intelligent Generation
+- **Natural Responses**: Human-like answers using Cohere's advanced language models
+- **Contextual Understanding**: Maintains conversation context for follow-up questions
+- **Precision-Tuned**: Optimized for academic and regulatory content
+
+### 🛠️ Technical Highlights
+- **Modular Architecture**: Clean separation of retrieval and generation components
+- **Efficient Processing**: Optimized chunking and embedding pipeline
+- **Local First**: Runs entirely on your machine with optional cloud components
+- **Extensible**: Easy to update with new handbook versions or additional data sources
 
 ---
 
-## 🗂️  Repository Layout
+## 🗂️  Repository Structure
 
 ```
+uov_fas_handbook_bot/
 ├── data/
-│   ├── raw/              # Original PDF
-│   ├── processed/        # Parsed JSON
-│   └── chunks/           # `handbook_chunks.jsonl`
-├── database/qdrant/      # Persistent Qdrant data
+│   ├── raw/                  # Original PDF documents
+│   ├── processed/            # Parsed and structured JSON
+│   └── chunks/               # Pre-processed text chunks
+├── database/qdrant/          # Vector database storage
 ├── src/
-│   ├── preprocessing/
-│   │   ├── pdf_parser.py
-│   │   └── chunker.py
-│   ├── embedding/
-│   │   ├── embedder.py
-│   │   ├── config.py
+│   ├── preprocessing/        # Document processing
+│   │   ├── pdf_parser.py     # PDF to structured data
+│   │   └── chunker.py        # Text segmentation
+│   │
+│   ├── embedding/            # Text embedding components
+│   │   ├── embedder.py       # Document embedding logic
 │   │   └── qdrant_singleton.py
-│   └── retrieval/
-│       ├── retriever.py
-│       └── reranker.py  # (placeholder)
-└── query_handbook.py     # CLI entry-point
+│   │
+│   ├── retrieval/            # Search and retrieval
+│   │   ├── retriever.py      # Query processing
+│   │   └── reranker.py       # Result re-ranking
+│   │
+│   └── generation/           # Response generation
+│       ├── generator.py      # Response generation logic
+│       └── nlp.py            # NLP utilities
+│
+├── query_handbook.py         # CLI interface
+├── requirements.txt          # Python dependencies
+└── README.md                 # This file
 ```
 
 ---
 
-## ⚙️  End-to-End Pipeline
+## ⚙️  How It Works
+
+### End-to-End Pipeline
 
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
 │                 │     │                 │     │                 │
 │  Handbook PDF   ├────►│  PDF Parser     ├────►│  JSON Chunks    │
 │                 │     │  (pdf_parser)   │     │  (chunker)      │
+        │                 │                 │            │
+        │                 │                 │            ▼
+        │                 │                 │   ┌─────────────────┐
+        │                 │                 │   │                 │
+        └─────────────────┴─────────────────┴──►│  Qdrant Vector  │
+                                                │     Storage      │
+┌─────────────────┐     ┌─────────────────┐     │                 │
+│                 │     │                 │     └────────┬────────┘
+│  User Query     ├────►│  Query Engine   │              │
+│                 │     │  (retriever)    │◄─────────────┘
+        │                 │                 │
+        │                 │                 │
+        ▼                 ▼                 │
+┌──────────────────────────────────────────────────────┐
+│                                                      │
+│  Response Generation (generator.py)                 │
+│  - Formats prompt with context                      │
+│  - Calls Cohere's language model                    │
+│  - Returns natural language response                 │
+│                                                      │
+└──────────────────────────────────────────────────────┘
+```
+
+### Key Components
+
+1. **Document Processing**
+   - Extracts and structures content from PDF handbooks
+   - Splits content into manageable chunks with metadata
+   - Generates semantic embeddings for efficient retrieval
+
+2. **Query Processing**
+   - Handles natural language queries
+   - Performs semantic search against the vector database
+   - Ranks and retrieves most relevant content chunks
+
+3. **Response Generation**
+   - Formats retrieved context into coherent responses
+   - Uses Cohere's language model for natural-sounding answers
+   - Includes source attribution for verification
 └─────────────────┘     └─────────────────┘     └────────┬────────┘
                                                        │
                                                        ▼
@@ -70,42 +127,44 @@ A Retrieval-Augmented Generation (RAG) assistant that answers academic questions
 3. **Embedding** – `embedder.py` encodes each chunk and stores **vector + payload** in Qdrant.  The collection name is `uov_fas_handbook` (see `src/embedding/config.py`).
 4. **Retrieval** – On each user question, `QueryEngine` embeds the improved query, fetches top-k similar chunks and returns them to the bot.
 5. *(Future)* **Re-ranking/LLM generation** – `reranker.py` is reserved for cross-encoder or GPT-based answer synthesis.
-
 ---
 
-## 🏗️  Installation
+## 🚀 Getting Started
 
-```bash
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
+### Prerequisites
 
-Key dependencies: `sentence-transformers`, `qdrant-client`, `pdfplumber`, `tqdm`.
+- Python 3.8+
+- pip (Python package manager)
+- Cohere API key (for response generation)
 
----
+### Installation
 
-## 🚀  Usage Guide
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/uov-fas-handbook-bot.git
+   cd uov-fas-handbook-bot
+   ```
 
-### 1 ▪ Create chunks
-```bash
-python -m src.preprocessing.chunker \
-  --input data/raw/fas_handbook.pdf \
-  --output-dir data/chunks \
-  --format jsonl
-```
+2. Create and activate a virtual environment:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
 
-### 2 ▪ Embed & ingest (persistent)
-```python
-from src.embedding.embedder import TextEmbedder, load_document_chunks
-from src.embedding.config import QDRANT_STORAGE_PATH
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-docs = load_document_chunks('data/chunks/handbook_chunks.jsonl')
-embedder = TextEmbedder(storage_path=QDRANT_STORAGE_PATH)
-embedder.add_documents(docs)
-```
+4. Set up environment variables:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your Cohere API key
+   ```
 
-### 3 ▪ Chat
+### Usage
+
+#### Command Line Interface
 ```bash
 python query_handbook.py
 ```
