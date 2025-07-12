@@ -4,6 +4,31 @@ A Retrieval-Augmented Generation (RAG) assistant that answers academic questions
 
 ![Demo](https://img.shields.io/badge/Demo-Available-success) [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 
+## 📋 Current Status (Last Updated: July 2025)
+
+### ✅ Implemented Features
+- **Document Processing**: PDF parsing and text extraction
+- **Vector Database**: Local Qdrant instance for efficient semantic search
+- **API Integration**: Cohere for response generation
+- **Web Interface**: Simple Flask-based web UI
+
+### ⚠️ Known Limitations
+- **Content Coverage**: 
+  - ✅ **Bio Science Department**: Most content has been processed and is available
+  - 🚧 **Physical Science Department**: Content is currently being updated and may be incomplete
+  - 🔄 **Other Departments**: Not yet processed
+
+- **Response Quality**: 
+  - Responses may vary in quality based on the available context
+  - Some specific queries might return incomplete or generic responses
+
+### 🔄 Update Process
+- The knowledge base is periodically updated as new handbook versions become available
+- Currently working on adding remaining department handbooks
+- Regular model fine-tuning is planned to improve response quality
+
+If you encounter any missing information or inaccuracies, please report them through the issue tracker.
+
 ## ✨  Key Features
 
 ### 🔍 Advanced Retrieval

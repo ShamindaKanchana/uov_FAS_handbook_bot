@@ -204,6 +204,16 @@ body {
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
+    /* Standard property for modern browsers */
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    display: -ms-flexbox;
+    -ms-flex-direction: column;
+    -ms-line-clamp: 3;
+    display: flex;
+    flex-direction: column;
+    max-height: 4.2em; /* Fallback for line height * number of lines */
 }
 
 /* Typing indicator */

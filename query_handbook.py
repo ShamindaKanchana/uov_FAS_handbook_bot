@@ -1,10 +1,13 @@
-# Update the imports at the top
 import sys
 from pathlib import Path
 from typing import Dict, Any, List
+from textwrap import fill
+
+# Add src to path to allow absolute imports
+sys.path.append(str(Path(__file__).parent))
+
 from src.retrieval.retriever import QueryEngine, SearchResult
 from src.generation.generator import ResponseGenerator, GenerationConfig
-from textwrap import fill
 
 def format_result(result: SearchResult) -> str:
     """Format a single search result for display."""

@@ -1,11 +1,15 @@
 import logging
 import sys
+import os
 from typing import List, Dict, Any, Optional, Union, Tuple
 from pathlib import Path
 from dataclasses import dataclass
 
 from sentence_transformers import SentenceTransformer
 from qdrant_client.models import Filter, FieldCondition, MatchValue
+
+# Add src to path to allow absolute imports
+sys.path.append(str(Path(__file__).parent.parent))
 
 from src.embedding.config import DEFAULT_MODEL
 from src.embedding.qdrant_singleton import QdrantClientSingleton
@@ -69,25 +73,47 @@ class QueryEngine:
         self.collection_name = collection_name
         self.model = SentenceTransformer(model_name)
         self.storage_path = Path(storage_path)
+        self._qdrant_singleton = None
+        self._client = None
         
         try:
-            self.client = QdrantClientSingleton(self.storage_path).get_client()
+            # Initialize the singleton but don't store the client directly
+            self._qdrant_singleton = QdrantClientSingleton(self.storage_path)
+            self._client = self._qdrant_singleton.get_client()
             self._verify_collection()
             logger.info(f"Connected to Qdrant collection: {collection_name} at {storage_path}")
         except Exception as e:
             logger.error(f"Failed to initialize QueryEngine: {str(e)}")
-            raise
+            # Don't raise here to allow the app to start in degraded mode
+            # The search method will handle the case when client is None
+    
+    @property
+    def client(self):
+        """Lazily get the Qdrant client, reinitializing if needed."""
+        if self._client is None and self._qdrant_singleton is not None:
+            try:
+                self._client = self._qdrant_singleton.get_client()
+            except Exception as e:
+                logger.error(f"Failed to get Qdrant client: {e}")
+        return self._client
     
     def _verify_collection(self) -> bool:
-        """Verify that the collection exists and is accessible."""
+        """Verify that the collection exists and is accessible. Create it if it doesn't exist."""
         try:
             collections = self.client.get_collections()
             collection_names = {c.name for c in collections.collections}
             if self.collection_name not in collection_names:
-                raise ValueError(
-                    f"Collection '{self.collection_name}' not found. "
-                    f"Available collections: {', '.join(collection_names) or 'None'}"
+                logger.info(f"Creating new collection: {self.collection_name}")
+                self.client.create_collection(
+                    collection_name=self.collection_name,
+                    vectors_config={
+                        "text": {
+                            "size": 384,  # Dimension of all-MiniLM-L6-v2 embeddings
+                            "distance": "Cosine"
+                        }
+                    }
                 )
+                logger.info(f"Created collection: {self.collection_name}")
             return True
         except Exception as e:
             logger.error(f"Collection verification failed: {str(e)}")
@@ -170,50 +196,61 @@ class QueryEngine:
         Returns:
             List[SearchResult]: List of search results with scores and metadata
         """
-        if not query or not isinstance(query, str) or not query.strip():
-            logger.warning("Invalid or empty search query provided")
+        if not query or not query.strip():
+            logger.warning("Empty query provided")
             return []
             
+        # Check if client is available
+        if self.client is None:
+            logger.error("Qdrant client is not available")
+            return []
+            
+        # Improve the query
+        improved_query = self._improve_query(query)
+        logger.info(f"Searching for: '{improved_query}'")
+        
+        # Generate embedding for the query
         try:
-            # Use the original query without aggressive processing
-            logger.info(f"Searching for: '{query}'")
+            query_embedding = self._generate_embedding(improved_query)
+        except Exception as e:
+            logger.error(f"Failed to generate embedding: {e}")
+            return []
             
-            # Generate query embedding
-            query_embedding = self._generate_embedding(query)
-            
-            # Prepare filter conditions
-            query_filter = self._build_filter_condition(filter_condition)
-            
-            # Execute search with error handling
-            search_results = self._execute_search(
-                query_embedding=query_embedding,
-                top_k=top_k * 2,  # Get more results for deduplication
-                score_threshold=score_threshold,
-                query_filter=query_filter,
-                **kwargs
-            )
-            
-            # Process and deduplicate results
-            results = self._process_search_results(search_results, top_k)
-            
-            # If no results, try again with a lower threshold
-            if not results and score_threshold > 0.1:
-                logger.debug("No results found, trying with lower threshold")
+        # Build filter condition if provided
+        query_filter = self._build_filter_condition(filter_condition)
+        
+        max_retries = 2
+        for attempt in range(max_retries):
+            try:
                 search_results = self._execute_search(
                     query_embedding=query_embedding,
-                    top_k=top_k * 2,
-                    score_threshold=0.1,  # Very low threshold
+                    top_k=top_k * 2,  # Get more results for deduplication
+                    score_threshold=score_threshold,
                     query_filter=query_filter,
                     **kwargs
                 )
-                results = self._process_search_results(search_results, top_k)
                 
-            return results
-            
-        except Exception as e:
-            logger.error(f"Search failed: {str(e)}", exc_info=True)
-            return []
-    
+                # If we got results, process and return them
+                if search_results is not None:
+                    return self._process_search_results(search_results, top_k)
+                
+            except Exception as e:
+                logger.warning(f"Search attempt {attempt + 1} failed: {e}")
+                if attempt == max_retries - 1:  # Last attempt
+                    logger.error(f"All search attempts failed for query: {improved_query}")
+                    return []
+                
+                # Reset the client and try again
+                try:
+                    if self._qdrant_singleton is not None:
+                        self._client = None  # Force reinitialization on next access
+                        self._client = self._qdrant_singleton.get_client()
+                except Exception as reset_error:
+                    logger.error(f"Failed to reset Qdrant client: {reset_error}")
+                    return []
+        
+        return []
+
     def _generate_embedding(self, text: str) -> List[float]:
         """Generate embedding for the given text."""
         try:
@@ -268,57 +305,77 @@ class QueryEngine:
         query_filter: Optional[Filter] = None,
         **kwargs
     ) -> List[Any]:
-        """Execute the search against Qdrant."""
-        try:
-            # First try with query_points API (newer versions of Qdrant)
-            try:
-                search_results = self.client.query_points(
-                    collection_name=self.collection_name,
-                    query_vector=query_embedding,  # Try without the tuple first
-                    limit=top_k * 2,
-                    query_filter=query_filter,
-                    score_threshold=score_threshold,
+        """
+        Execute the search against Qdrant with multiple fallback strategies.
+        
+        Args:
+            query_embedding: The embedding vector to search with
+            top_k: Maximum number of results to return
+            score_threshold: Minimum similarity score (0-1) for results
+            query_filter: Optional filter conditions
+            **kwargs: Additional search parameters
+            
+        Returns:
+            List of search results or empty list on failure
+        """
+        if not hasattr(self, 'client') or self.client is None:
+            logger.error("Qdrant client is not available for search")
+            return []
+            
+        search_methods = [
+            # Method 1: query_points with direct vector
+            {
+                'name': 'query_points_direct',
+                'func': self.client.query_points,
+                'args': {
+                    'collection_name': self.collection_name,
+                    'query_vector': query_embedding,
+                    'limit': top_k * 2,
+                    'query_filter': query_filter,
+                    'score_threshold': score_threshold,
                     **kwargs
-                )
-                logger.debug(f"Found {len(search_results)} results using query_points")
+                }
+            },
+            # Method 2: query_points with field name
+            {
+                'name': 'query_points_field',
+                'func': self.client.query_points,
+                'args': {
+                    'collection_name': self.collection_name,
+                    'query_vector': ("text", query_embedding),
+                    'limit': top_k * 2,
+                    'query_filter': query_filter,
+                    'score_threshold': score_threshold,
+                    **kwargs
+                }
+            },
+            # Method 3: Fallback to older search API
+            {
+                'name': 'search',
+                'func': self.client.search,
+                'args': {
+                    'collection_name': self.collection_name,
+                    'query_vector': query_embedding,
+                    'limit': top_k * 2,
+                    'query_filter': query_filter,
+                    'score_threshold': score_threshold,
+                    **kwargs
+                }
+            }
+        ]
+        
+        # Try each search method until one succeeds
+        for method in search_methods:
+            try:
+                search_results = method['func'](**method['args'])
+                logger.debug(f"Found {len(search_results)} results using {method['name']}")
                 return search_results
             except Exception as e:
-                logger.debug(f"query_points with direct vector failed, trying with field name: {str(e)}")
+                logger.debug(f"Search method {method['name']} failed: {str(e)}")
+                continue
                 
-                # If that fails, try with the field name
-                try:
-                    search_results = self.client.query_points(
-                        collection_name=self.collection_name,
-                        query_vector=("text", query_embedding),  # Try with field name
-                        limit=top_k * 2,
-                        query_filter=query_filter,
-                        score_threshold=score_threshold,
-                        **kwargs
-                    )
-                    logger.debug(f"Found {len(search_results)} results using query_points with field name")
-                    return search_results
-                except Exception as e2:
-                    logger.debug(f"query_points with field name failed, falling back to search: {str(e2)}")
-            
-            # Fall back to the older search method
-            try:
-                search_results = self.client.search(
-                    collection_name=self.collection_name,
-                    query_vector=query_embedding,
-                    limit=top_k * 2,  # Get more results for deduplication
-                    query_filter=query_filter,
-                    score_threshold=score_threshold,
-                    **kwargs
-                )
-                logger.debug(f"Found {len(search_results)} results using search")
-                return search_results
-            except Exception as e3:
-                logger.error(f"Search API failed: {str(e3)}", exc_info=True)
-                return []
-                
-        except Exception as e:
-            logger.error(f"Search execution failed: {str(e)}", exc_info=True)
-            return []
+        logger.error("All search methods failed")
+        return []
     
     def _process_search_results(
         self,

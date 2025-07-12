@@ -1,0 +1,196 @@
+2025-07-13 01:42:53,621 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-07-13 01:42:53,621 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-07-13 01:43:01,654 - src.embedding.qdrant_singleton - INFO - Initializing Qdrant client at: /home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/qdrant_handbook
+2025-07-13 01:43:01,687 - src.embedding.qdrant_singleton - INFO - Qdrant client initialized successfully
+2025-07-13 01:43:01,688 - src.retrieval.retriever - INFO - Connected to Qdrant collection: handbook_chunks at /home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/qdrant_handbook
+2025-07-13 01:43:01,688 - __main__ - INFO - Successfully initialized QueryEngine with Qdrant client
+2025-07-13 01:43:01,692 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.213.204.232:5000
+2025-07-13 01:43:01,693 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-13 01:43:37,548 - __main__ - INFO - Closed Qdrant client during app teardown
+2025-07-13 01:43:37,548 - __main__ - INFO - Closed Qdrant client during app teardown
+2025-07-13 01:43:37,548 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 01:43:37] "GET / HTTP/1.1" 200 -
+2025-07-13 01:43:37,549 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 01:43:37] "GET / HTTP/1.1" 200 -
+2025-07-13 01:43:38,075 - __main__ - INFO - Closed Qdrant client during app teardown
+2025-07-13 01:43:38,088 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 01:43:38] "GET /static/js/main.js HTTP/1.1" 200 -
+2025-07-13 01:43:38,086 - __main__ - INFO - Closed Qdrant client during app teardown
+2025-07-13 01:43:38,093 - __main__ - INFO - Closed Qdrant client during app teardown
+2025-07-13 01:43:38,111 - __main__ - INFO - Closed Qdrant client during app teardown
+2025-07-13 01:43:38,111 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 01:43:38] "GET /static/css/style.css HTTP/1.1" 200 -
+2025-07-13 01:43:38,112 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 01:43:38] "GET /static/css/style.css HTTP/1.1" 200 -
+2025-07-13 01:43:38,115 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 01:43:38] "GET /static/js/main.js HTTP/1.1" 200 -
+2025-07-13 01:43:38,189 - __main__ - INFO - Closed Qdrant client during app teardown
+2025-07-13 01:43:38,189 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 01:43:38] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-07-13 01:43:38,191 - __main__ - INFO - Closed Qdrant client during app teardown
+2025-07-13 01:43:38,191 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 01:43:38] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-07-13 01:44:17,626 - routes - INFO - Processing query: I want to know about university of Vavuniya beginning
+2025-07-13 01:44:17,626 - src.retrieval.retriever - INFO - Searching for: 'I want to know about university of Vavuniya beginning'
+2025-07-13 01:44:17,728 - src.retrieval.retriever - ERROR - Search API failed: QdrantLocal instance is closed. Please create a new instance.
+Traceback (most recent call last):
+  File "/home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/src/retrieval/retriever.py", line 316, in _execute_search
+    search_results = self.client.search(
+                     ^^^^^^^^^^^^^^^^^^^
+  File "/home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/venv/lib/python3.12/site-packages/qdrant_client/qdrant_client.py", line 376, in search
+    return self._client.search(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/venv/lib/python3.12/site-packages/qdrant_client/local/qdrant_local.py", line 214, in search
+    collection = self._get_collection(collection_name)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/venv/lib/python3.12/site-packages/qdrant_client/local/qdrant_local.py", line 166, in _get_collection
+    raise RuntimeError("QdrantLocal instance is closed. Please create a new instance.")
+RuntimeError: QdrantLocal instance is closed. Please create a new instance.
+2025-07-13 01:44:17,730 - src.retrieval.retriever - ERROR - Search API failed: QdrantLocal instance is closed. Please create a new instance.
+Traceback (most recent call last):
+  File "/home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/src/retrieval/retriever.py", line 316, in _execute_search
+    search_results = self.client.search(
+                     ^^^^^^^^^^^^^^^^^^^
+  File "/home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/venv/lib/python3.12/site-packages/qdrant_client/qdrant_client.py", line 376, in search
+    return self._client.search(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/venv/lib/python3.12/site-packages/qdrant_client/local/qdrant_local.py", line 214, in search
+    collection = self._get_collection(collection_name)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/venv/lib/python3.12/site-packages/qdrant_client/local/qdrant_local.py", line 166, in _get_collection
+    raise RuntimeError("QdrantLocal instance is closed. Please create a new instance.")
+RuntimeError: QdrantLocal instance is closed. Please create a new instance.
+2025-07-13 01:44:17,731 - routes - INFO - Found 0 relevant results
+2025-07-13 01:44:17,731 - __main__ - INFO - Closed Qdrant client during app teardown
+2025-07-13 01:44:17,731 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 01:44:17] "POST /api/ask HTTP/1.1" 200 -
+2025-07-13 01:44:34,853 - routes - INFO - Processing query: I want to know how calculate GPA
+2025-07-13 01:44:34,853 - src.retrieval.retriever - INFO - Searching for: 'I want to know how calculate GPA'
+2025-07-13 01:44:34,882 - src.retrieval.retriever - ERROR - Search API failed: QdrantLocal instance is closed. Please create a new instance.
+Traceback (most recent call last):
+  File "/home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/src/retrieval/retriever.py", line 316, in _execute_search
+    search_results = self.client.search(
+                     ^^^^^^^^^^^^^^^^^^^
+  File "/home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/venv/lib/python3.12/site-packages/qdrant_client/qdrant_client.py", line 376, in search
+    return self._client.search(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/venv/lib/python3.12/site-packages/qdrant_client/local/qdrant_local.py", line 214, in search
+    collection = self._get_collection(collection_name)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/venv/lib/python3.12/site-packages/qdrant_client/local/qdrant_local.py", line 166, in _get_collection
+    raise RuntimeError("QdrantLocal instance is closed. Please create a new instance.")
+RuntimeError: QdrantLocal instance is closed. Please create a new instance.
+2025-07-13 01:44:34,883 - src.retrieval.retriever - ERROR - Search API failed: QdrantLocal instance is closed. Please create a new instance.
+Traceback (most recent call last):
+  File "/home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/src/retrieval/retriever.py", line 316, in _execute_search
+    search_results = self.client.search(
+                     ^^^^^^^^^^^^^^^^^^^
+  File "/home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/venv/lib/python3.12/site-packages/qdrant_client/qdrant_client.py", line 376, in search
+    return self._client.search(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/venv/lib/python3.12/site-packages/qdrant_client/local/qdrant_local.py", line 214, in search
+    collection = self._get_collection(collection_name)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/venv/lib/python3.12/site-packages/qdrant_client/local/qdrant_local.py", line 166, in _get_collection
+    raise RuntimeError("QdrantLocal instance is closed. Please create a new instance.")
+RuntimeError: QdrantLocal instance is closed. Please create a new instance.
+2025-07-13 01:44:34,884 - routes - INFO - Found 0 relevant results
+2025-07-13 01:44:34,884 - __main__ - INFO - Closed Qdrant client during app teardown
+2025-07-13 01:44:34,884 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 01:44:34] "POST /api/ask HTTP/1.1" 200 -
+2025-07-13 01:48:49,814 - src.embedding.qdrant_singleton - INFO - Received signal 2, cleaning up...
+2025-07-13 01:48:49,814 - src.embedding.qdrant_singleton - INFO - Closing Qdrant client...
+2025-07-13 01:48:49,815 - src.embedding.qdrant_singleton - INFO - Qdrant client closed successfully.
+2025-07-13 01:48:49,816 - src.embedding.qdrant_singleton - INFO - Removed lock file: /home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/qdrant_handbook/.lock
+2025-07-13 01:49:08,254 - src.embedding.qdrant_singleton - INFO - Initializing Qdrant client at: /home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/qdrant_handbook
+2025-07-13 01:49:08,268 - src.embedding.qdrant_singleton - INFO - Qdrant client initialized successfully
+2025-07-13 01:49:08,269 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-07-13 01:49:08,269 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-07-13 01:49:14,013 - src.retrieval.retriever - INFO - Connected to Qdrant collection: handbook_chunks at /home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/qdrant_handbook
+2025-07-13 01:49:14,014 - __main__ - INFO - Successfully initialized QueryEngine with Qdrant client
+2025-07-13 01:49:14,024 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.213.204.232:5000
+2025-07-13 01:49:14,025 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-13 01:49:39,245 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 01:49:39] "GET / HTTP/1.1" 200 -
+2025-07-13 01:49:39,286 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 01:49:39] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+2025-07-13 01:49:39,287 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 01:49:39] "GET /static/css/style.css HTTP/1.1" 200 -
+2025-07-13 01:49:49,522 - routes - INFO - Processing query: I want to know how calculate GPA
+2025-07-13 01:49:49,522 - src.retrieval.retriever - INFO - Searching for: 'i want to know how calculate gpa'
+2025-07-13 01:49:49,558 - src.retrieval.retriever - INFO - Returning 3 processed results
+2025-07-13 01:49:49,558 - routes - INFO - Found 3 relevant results
+2025-07-13 01:49:49,558 - routes - ERROR - Search error: 'SearchResult' object has no attribute 'get'
+Traceback (most recent call last):
+  File "/home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/routes.py", line 187, in ask
+    prompt = format_prompt(query, results)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/routes.py", line 53, in format_prompt
+    metadata = result.get('metadata', {})
+               ^^^^^^^^^^
+AttributeError: 'SearchResult' object has no attribute 'get'
+2025-07-13 01:49:49,560 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 01:49:49] "[35m[1mPOST /api/ask HTTP/1.1[0m" 500 -
+2025-07-13 01:52:19,322 - src.embedding.qdrant_singleton - INFO - Received signal 2, cleaning up...
+2025-07-13 01:52:19,323 - src.embedding.qdrant_singleton - INFO - Closing Qdrant client...
+2025-07-13 01:52:19,324 - src.embedding.qdrant_singleton - INFO - Qdrant client closed successfully.
+2025-07-13 01:52:19,325 - src.embedding.qdrant_singleton - INFO - Removed lock file: /home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/qdrant_handbook/.lock
+2025-07-13 01:52:29,211 - src.embedding.qdrant_singleton - INFO - Initializing Qdrant client at: /home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/qdrant_handbook
+2025-07-13 01:52:29,227 - src.embedding.qdrant_singleton - INFO - Qdrant client initialized successfully
+2025-07-13 01:52:29,228 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-07-13 01:52:29,228 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-07-13 01:52:34,996 - src.retrieval.retriever - INFO - Connected to Qdrant collection: handbook_chunks at /home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/qdrant_handbook
+2025-07-13 01:52:34,997 - __main__ - INFO - Successfully initialized QueryEngine with Qdrant client
+2025-07-13 01:52:35,001 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.213.204.232:5000
+2025-07-13 01:52:35,001 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-13 01:52:44,057 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 01:52:44] "GET / HTTP/1.1" 200 -
+2025-07-13 01:52:44,084 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 01:52:44] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+2025-07-13 01:52:44,085 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 01:52:44] "GET /static/css/style.css HTTP/1.1" 200 -
+2025-07-13 01:52:57,594 - routes - INFO - Processing query: I want to know how calculate GPA
+2025-07-13 01:52:57,594 - src.retrieval.retriever - INFO - Searching for: 'i want to know how calculate gpa'
+2025-07-13 01:52:57,623 - src.retrieval.retriever - INFO - Returning 3 processed results
+2025-07-13 01:52:57,624 - routes - INFO - Found 3 relevant results
+2025-07-13 01:52:57,624 - routes - ERROR - Error generating response: name 'cohere_client' is not defined
+Traceback (most recent call last):
+  File "/home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/routes.py", line 190, in ask
+    response = cohere_client.chat(
+               ^^^^^^^^^^^^^
+NameError: name 'cohere_client' is not defined
+2025-07-13 01:52:57,632 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 01:52:57] "[35m[1mPOST /api/ask HTTP/1.1[0m" 500 -
+2025-07-13 01:55:54,310 - src.embedding.qdrant_singleton - INFO - Received signal 2, cleaning up...
+2025-07-13 01:55:54,311 - src.embedding.qdrant_singleton - INFO - Closing Qdrant client...
+2025-07-13 01:55:54,312 - src.embedding.qdrant_singleton - INFO - Qdrant client closed successfully.
+2025-07-13 01:55:54,313 - src.embedding.qdrant_singleton - INFO - Removed lock file: /home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/qdrant_handbook/.lock
+2025-07-13 01:56:12,516 - src.embedding.qdrant_singleton - INFO - Initializing Qdrant client at: /home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/qdrant_handbook
+2025-07-13 01:56:12,536 - src.embedding.qdrant_singleton - INFO - Qdrant client initialized successfully
+2025-07-13 01:56:12,537 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-07-13 01:56:12,537 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-07-13 01:56:18,741 - src.retrieval.retriever - INFO - Connected to Qdrant collection: handbook_chunks at /home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/qdrant_handbook
+2025-07-13 01:56:18,741 - __main__ - INFO - Successfully initialized QueryEngine with Qdrant client
+2025-07-13 01:56:18,751 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.213.204.232:5000
+2025-07-13 01:56:18,752 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-13 01:57:10,713 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 01:57:10] "GET / HTTP/1.1" 200 -
+2025-07-13 01:57:10,756 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 01:57:10] "GET /static/css/style.css HTTP/1.1" 200 -
+2025-07-13 01:57:10,757 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 01:57:10] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+2025-07-13 01:57:20,476 - routes - INFO - Processing query: how calculate GPA
+2025-07-13 01:57:20,476 - src.retrieval.retriever - INFO - Searching for: 'how calculate gpa'
+2025-07-13 01:57:20,514 - src.retrieval.retriever - INFO - Returning 3 processed results
+2025-07-13 01:57:20,515 - routes - INFO - Found 3 relevant results
+2025-07-13 01:57:22,508 - httpx - INFO - HTTP Request: POST https://api.cohere.com/v2/chat "HTTP/1.1 200 OK"
+2025-07-13 01:57:22,522 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 01:57:22] "POST /api/ask HTTP/1.1" 200 -
+2025-07-13 01:57:56,233 - routes - INFO - Processing query: How grades come in environmental science degree program
+2025-07-13 01:57:56,233 - src.retrieval.retriever - INFO - Searching for: 'how grades come in environmental science degree program'
+2025-07-13 01:57:56,326 - src.retrieval.retriever - INFO - Returning 3 processed results
+2025-07-13 01:57:56,327 - routes - INFO - Found 3 relevant results
+2025-07-13 01:57:58,244 - httpx - INFO - HTTP Request: POST https://api.cohere.com/v2/chat "HTTP/1.1 200 OK"
+2025-07-13 01:57:58,249 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 01:57:58] "POST /api/ask HTTP/1.1" 200 -
+2025-07-13 01:58:43,669 - routes - INFO - Processing query: I want to know how take diploma of environmental science
+2025-07-13 01:58:43,670 - src.retrieval.retriever - INFO - Searching for: 'i want to know how take diploma of environmental science'
+2025-07-13 01:58:43,721 - src.retrieval.retriever - INFO - Returning 3 processed results
+2025-07-13 01:58:43,722 - routes - INFO - Found 3 relevant results
+2025-07-13 01:58:45,914 - httpx - INFO - HTTP Request: POST https://api.cohere.com/v2/chat "HTTP/1.1 200 OK"
+2025-07-13 01:58:45,933 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 01:58:45] "POST /api/ask HTTP/1.1" 200 -
+2025-07-13 01:59:24,423 - routes - INFO - Processing query: How get diploma
+2025-07-13 01:59:24,424 - src.retrieval.retriever - INFO - Searching for: 'how get diploma'
+2025-07-13 01:59:24,451 - src.retrieval.retriever - INFO - Returning 3 processed results
+2025-07-13 01:59:24,451 - routes - INFO - Found 3 relevant results
+2025-07-13 01:59:26,010 - httpx - INFO - HTTP Request: POST https://api.cohere.com/v2/chat "HTTP/1.1 200 OK"
+2025-07-13 01:59:26,015 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 01:59:26] "POST /api/ask HTTP/1.1" 200 -
