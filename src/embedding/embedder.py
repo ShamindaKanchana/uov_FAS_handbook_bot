@@ -252,17 +252,19 @@ class TextEmbedder:
         batch_size: int = DEFAULT_BATCH_SIZE,
         text_field: str = "text",
         metadata_field: str = "metadata",
-        chunk_size: int = 500
+        chunk_size: int = 500,
+        skip_chunking: bool = False
     ) -> Dict[str, int]:
         """
-        Add documents to the vector store with embedding and chunking.
+        Add documents to the vector store with optional chunking.
         
         Args:
             documents: List of document dictionaries
             batch_size: Number of documents to process in each batch
             text_field: Key in document containing the text to embed
             metadata_field: Key in document containing metadata
-            chunk_size: Maximum number of words per chunk
+            chunk_size: Maximum number of words per chunk (used when skip_chunking=False)
+            skip_chunking: If True, assumes documents are already properly chunked
             
         Returns:
             Dictionary with statistics about the operation
@@ -271,12 +273,42 @@ class TextEmbedder:
             logger.warning("No documents provided to add")
             return {"total_documents": 0, "total_chunks": 0, "batches_processed": 0}
             
-        # Prepare all documents with chunking
-        prepared_docs = self._prepare_documents(
-            documents,
-            text_field=text_field,
-            metadata_field=metadata_field
-        )
+        # Prepare documents with or without chunking
+        if skip_chunking:
+            logger.info("Using pre-chunked documents (chunking skipped)")
+            prepared_docs = []
+            for doc in documents:
+                if not isinstance(doc, dict):
+                    logger.warning(f"Skipping non-dict document: {doc}")
+                    continue
+                    
+                # Extract text and metadata
+                text = doc.get('text', doc.get('content', '')).strip()
+                if not text:
+                    logger.warning("Document has no text content")
+                    continue
+                    
+                # Get or create metadata
+                metadata = doc.get('metadata', {})
+                if not isinstance(metadata, dict):
+                    metadata = {}
+                    
+                # Preserve any top-level fields as metadata
+                metadata.update({
+                    k: v for k, v in doc.items() 
+                    if k not in ['text', 'content', 'metadata'] and v is not None
+                })
+                
+                prepared_docs.append({
+                    'text': text,
+                    'metadata': metadata
+                })
+        else:
+            prepared_docs = self._prepare_documents(
+                documents,
+                text_field=text_field,
+                metadata_field=metadata_field
+            )
         
         total_chunks = len(prepared_docs)
         if not total_chunks:
@@ -451,7 +483,7 @@ class TextEmbedder:
 
 def load_document_chunks(chunks_path: str) -> list[dict]:
     """
-    Load document chunks from a JSON or JSONL file.
+    Load document chunks from a JSON or JSONL file, with special handling for Qdrant export format.
     
     Args:
         chunks_path: Path to the JSON/JSONL file containing document chunks
@@ -471,41 +503,36 @@ def load_document_chunks(chunks_path: str) -> list[dict]:
         raise FileNotFoundError(f"Chunks file not found at {chunks_path}")
     
     logger.info(f"Loading chunks from {chunks_path}")
-    # Detect JSONL by extension or fallback if array parsing fails
-    chunks_data = []
+    
+    # Read the file content first to detect format
     try:
-        if chunks_path.suffix.lower() == ".jsonl":
-            with open(chunks_path, "r", encoding="utf-8") as f:
-                for line_no, line in enumerate(f, 1):
-                    line = line.strip()
-                    if not line:
-                        continue
-                    try:
-                        chunks_data.append(json.loads(line))
-                    except json.JSONDecodeError as e:
-                        logger.error(f"JSON decode error at line {line_no}: {e}")
-                        raise
-        else:
-            with open(chunks_path, "r", encoding="utf-8") as f:
-                chunks_data = json.load(f)
-                if not isinstance(chunks_data, list):
-                    logger.warning("Expected a list at root; wrapping single object in list")
-                    chunks_data = [chunks_data]
-    except json.JSONDecodeError:
-        logger.info("Falling back to JSONL parsing after array load failure")
         with open(chunks_path, "r", encoding="utf-8") as f:
-            for line_no, line in enumerate(f, 1):
-                line = line.strip()
-                if not line:
-                    continue
-                chunks_data.append(json.loads(line))
+            content = f.read().strip()
+            
+        # Try to parse as JSON array first
+        if content.startswith('[') and content.endswith(']'):
+            try:
+                chunks_data = json.loads(content)
+                if not isinstance(chunks_data, list):
+                    chunks_data = [chunks_data]
+            except json.JSONDecodeError:
+                # Fall through to JSONL parsing
+                chunks_data = [json.loads(line) for line in content.splitlines() if line.strip()]
+        else:
+            # Parse as JSONL
+            chunks_data = [json.loads(line) for line in content.splitlines() if line.strip()]
+            
+    except Exception as e:
+        logger.error(f"Error parsing file {chunks_path}: {e}")
+        raise
     
     if not chunks_data:
         logger.warning("No chunks found in the input file")
         return []
     
     # Log sample of the first chunk for debugging
-    logger.info(f"First chunk sample: {json.dumps(chunks_data[0], indent=2)[:500]}...")
+    sample = json.dumps(chunks_data[0], indent=2, ensure_ascii=False)
+    logger.info(f"First chunk sample: {sample[:500]}...")
     
     # Convert chunks to the format expected by TextEmbedder
     documents = []
@@ -513,43 +540,55 @@ def load_document_chunks(chunks_path: str) -> list[dict]:
     
     for i, chunk in enumerate(chunks_data):
         try:
-            # Handle Qdrant export format (has 'payload' with 'content')
+            # Skip None or empty chunks
+            if not chunk:
+                empty_chunks += 1
+                continue
+                
+            # Handle Qdrant export format (has 'payload' with 'content' or 'text')
             if isinstance(chunk, dict) and 'payload' in chunk and isinstance(chunk['payload'], dict):
                 payload = chunk['payload']
-                text = payload.get('content', '')
-                metadata = {k: v for k, v in payload.items() if k != 'content'}
+                # Try both 'content' and 'text' fields
+                text = payload.get('content', payload.get('text', '')).strip()
+                
+                # Extract metadata from payload first, excluding content/text
+                metadata = {k: v for k, v in payload.items() 
+                          if k not in ['content', 'text'] and v is not None}
                 
                 # Add any additional metadata from the root level
-                metadata.update({k: v for k, v in chunk.items() if k not in ['payload', 'vector']})
+                metadata.update({k: v for k, v in chunk.items() 
+                              if k not in ['payload', 'vector'] and v is not None})
                 
-                # Ensure required metadata fields exist
-                metadata.setdefault('source', 'unknown')
-                metadata.setdefault('page', 0)
+                # Ensure required metadata fields exist with sensible defaults
+                metadata.setdefault('source', metadata.get('source', 'unknown'))
+                metadata.setdefault('page', metadata.get('page', 0))
                 metadata['chunk_id'] = metadata.get('chunk_id', i)
                 metadata['total_chunks'] = metadata.get('total_chunks', len(chunks_data))
                 
-            # Handle standard chunk format
+            # Handle standard chunk format (either direct or with metadata field)
             elif isinstance(chunk, dict):
-                # If chunk is a dict, try to extract text and metadata
-                text = chunk.get('text', '')
-                if not text and 'content' in chunk:
-                    text = chunk['content']  # Some chunkers use 'content' instead of 'text'
+                # Extract text from either 'text' or 'content' field
+                text = chunk.get('text', chunk.get('content', '')).strip()
                 
-                # Extract metadata
+                # Extract metadata from 'metadata' field or use the chunk itself
                 metadata = chunk.get('metadata', {})
-                if not metadata and any(k != 'text' and k != 'content' for k in chunk.keys()):
-                    # If no explicit metadata but has other keys, use them as metadata
-                    metadata = {k: v for k, v in chunk.items() if k not in ['text', 'content']}
+                if not isinstance(metadata, dict):
+                    metadata = {}
+                    
+                # Add any non-standard fields as metadata (except text/content)
+                metadata.update({k: v for k, v in chunk.items() 
+                              if k not in ['text', 'content', 'metadata'] 
+                              and v is not None})
                 
-                # Ensure required metadata fields exist
-                metadata.setdefault('source', chunk.get('source', 'unknown'))
-                metadata.setdefault('page', chunk.get('page', 0))
+                # Set default values for required fields
+                metadata.setdefault('source', 'unknown')
+                metadata.setdefault('page', 0)
                 metadata['chunk_id'] = chunk.get('chunk_id', i)
                 metadata['total_chunks'] = chunk.get('total_chunks', len(chunks_data))
                 
-            # Handle string chunks
+            # Handle string chunks (should be rare with Qdrant exports)
             elif isinstance(chunk, str):
-                text = chunk
+                text = chunk.strip()
                 metadata = {
                     'source': 'unknown',
                     'page': 0,
@@ -560,14 +599,14 @@ def load_document_chunks(chunks_path: str) -> list[dict]:
                 logger.warning(f"Unexpected chunk type {type(chunk)} at index {i}")
                 continue
             
-            # Clean and validate text
-            if not text or not isinstance(text, str) or not text.strip():
+            # Skip empty text chunks
+            if not text:
                 empty_chunks += 1
-                logger.debug(f"Empty or invalid text in chunk {i}")
+                logger.debug(f"Empty text in chunk {i}")
                 continue
                 
             documents.append({
-                "text": text.strip(),
+                "text": text,
                 "metadata": metadata
             })
             
@@ -583,32 +622,31 @@ def load_document_chunks(chunks_path: str) -> list[dict]:
 
 def main():
     """
-    Main function to demonstrate TextEmbedder with actual document chunks.
+    Main function to process document chunks and create embeddings.
     """
-    import time
     from pathlib import Path
     
     # Path to the chunks file
     project_root = Path(__file__).parent.parent.parent
-    chunks_path = project_root / "data" / "processed" / "chunks" / "handbook_chunks.json"
+    chunks_path = project_root / "data" / "chunks" / "qdrant_points.jsonl"
     
     try:
-        # Load actual document chunks
+        # Load document chunks
         print(f"Loading document chunks from {chunks_path}...")
         documents = load_document_chunks(chunks_path)
         print(f"Loaded {len(documents)} document chunks")
         
-        # Initialize the embedder with a collection for the handbook
+        # Initialize the embedder
         print("\nInitializing TextEmbedder...")
         storage_path = "./qdrant_handbook"
         collection_name = "handbook_chunks"
         
-        # First, create a client to clean up any existing collection
+        # Clean up any existing collection
         try:
             temp_client = QdrantClient(path=storage_path)
             collections = temp_client.get_collections()
             if collection_name in [c.name for c in collections.collections]:
-                print(f"Cleaning up existing collection: {collection_name}")
+                print(f"Removing existing collection: {collection_name}")
                 temp_client.delete_collection(collection_name=collection_name)
         except Exception as e:
             print(f"Warning: Could not clean up existing collection: {e}")
@@ -616,105 +654,31 @@ def main():
             if 'temp_client' in locals():
                 temp_client.close()
         
-        # Now initialize our embedder
+        # Initialize the embedder
         embedder = TextEmbedder(
             model_name="all-MiniLM-L6-v2",
             collection_name=collection_name,
             storage_path=storage_path
         )
         
-        try:
-            # Add documents
-            print("\nAdding documents to the vector store...")
-            result = embedder.add_documents(documents)
-            print(f"Added {result['total_documents']} documents as {result['total_chunks']} chunks")
-            
-            # Give Qdrant a moment to index
-            print("\nWaiting for indexing to complete...")
-            time.sleep(2)
-            
-            # Example searches
-            test_queries = [
-                "Subjects belongs to applied mathamatics and computing",
-                "Bio Sience department information",
-                "What are the subjects in IT degree",
-                "What are the subjects in Bio Sience degree"
-            ]
-            
-            for query in test_queries:
-                print(f"\n{'='*80}")
-                print(f"SEARCH RESULTS FOR: '{query}'")
-                print(f"{'='*80}")
-                
-                # Basic search
-                print("\nBasic search results:")
-                try:
-                    results = embedder.search(query, top_k=2)
-                    if not results:
-                        print("No results found")
-                    else:
-                        for i, result in enumerate(results, 1):
-                            print(f"\nResult {i} (Score: {result['score']:.4f}):")
-                            print(f"Source: {result['metadata'].get('source', 'N/A')}")
-                            print(f"Page: {result['metadata'].get('page', 'N/A')}")
-                            print(f"Text: {result['text']}")
-                except Exception as e:
-                    print(f"Error during search: {e}")
-            
-            # Show metadata filtering
-            print("\n" + "="*80)
-            print("METADATA FILTERING EXAMPLE")
-            print("="*80)
-            print("\nSearching for chunks from a specific source:")
-            try:
-                # Get the first source for demonstration
-                sample_source = documents[0]['metadata'].get('source', '') if documents else ""
-                if sample_source:
-                    results = embedder.search(
-                        "",  # Empty query to get any matching documents
-                        filter_condition={"source": sample_source},
-                        top_k=2
-                    )
-                    if not results:
-                        print(f"No results found for source: {sample_source}")
-                    else:
-                        print(f"\nFound {len(results)} chunks from source: {sample_source}")
-                        for i, result in enumerate(results, 1):
-                            print(f"\nResult {i} (Score: {result['score']:.4f}):")
-                            print(f"Source: {result['metadata'].get('source', 'N/A')}")
-                            print(f"Page: {result['metadata'].get('page', 'N/A')}")
-                            print(f"Text: {result['text']}")
-                else:
-                    print("No source information available in the chunks")
-            except Exception as e:
-                print(f"Error during filtered search: {e}")
+        # Add documents with skip_chunking=True for pre-chunked data
+        print("\nAdding documents to the vector store...")
+        result = embedder.add_documents(
+            documents,
+            skip_chunking=True  # Skip chunking since data is already chunked
+        )
         
-        except Exception as e:
-            print(f"An error occurred: {e}")
-        finally:
-            # Clean up
-            user_input = input("\nDo you want to delete the collection? (y/n): ")
-            if user_input.lower() == 'y':
-                print("Cleaning up collection...")
-                embedder.delete_collection()
-            else:
-                print(f"\nCollection '{collection_name}' was not deleted.")
-                print(f"You can access it later with collection name: {collection_name}")
-                print(f"Storage path: {storage_path}")
+        print(f"\nSuccessfully processed {result['total_chunks']} chunks")
+        print(f"Collection '{collection_name}' is ready for use")
+        print(f"Storage location: {Path(storage_path).resolve()}")
     
     except Exception as e:
         print(f"An error occurred: {e}")
-    finally:
-        # Clean up (comment this out if you want to keep the collection)
-        user_input = input("\nDo you want to delete the test collection? (y/n): ")
-        if user_input.lower() == 'y':
-            print("Cleaning up test collection...")
-            embedder.delete_collection()
-        else:
-            print(f"Test collection '{collection_name}' was not deleted.")
-            print(f"You can access it later with collection name: {collection_name}")
-            print(f"Storage path: {storage_path}")
+        return 1
+    
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    sys.exit(main())
