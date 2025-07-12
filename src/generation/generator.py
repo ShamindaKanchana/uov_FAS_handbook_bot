@@ -1,6 +1,6 @@
 from typing import List, Dict, Any
 from dataclasses import dataclass
-from src.retrieval.retriever import SearchResult
+from ..retrieval.retriever import SearchResult
 from .nlp import get_clean_response
 
 @dataclass
