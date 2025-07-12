@@ -15,19 +15,14 @@ A Retrieval-Augmented Generation (RAG) assistant that answers academic questions
 ### ⚠️ Known Limitations
 - **Content Coverage**: 
   - ✅ **Bio Science Department**: Most content has been processed and is available
-  - 🚧 **Physical Science Department**: Content is currently being updated and may be incomplete
-  - 🔄 **Other Departments**: Not yet processed
+  - 🚧 **Physical Science Department**:  Not yet processed
 
 - **Response Quality**: 
   - Responses may vary in quality based on the available context
   - Some specific queries might return incomplete or generic responses
 
 ### 🔄 Update Process
-- The knowledge base is periodically updated as new handbook versions become available
-- Currently working on adding remaining department handbooks
-- Regular model fine-tuning is planned to improve response quality
-
-If you encounter any missing information or inaccuracies, please report them through the issue tracker.
+- Existing issues will identify and fix with the time 
 
 ## ✨  Key Features
 
@@ -86,32 +81,16 @@ uov_fas_handbook_bot/
 
 ### End-to-End Pipeline
 
-```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│                 │     │                 │     │                 │
-│  Handbook PDF   ├────►│  PDF Parser     ├────►│  JSON Chunks    │
-│                 │     │  (pdf_parser)   │     │  (chunker)      │
-        │                 │                 │            │
-        │                 │                 │            ▼
-        │                 │                 │   ┌─────────────────┐
-        │                 │                 │   │                 │
-        └─────────────────┴─────────────────┴──►│  Qdrant Vector  │
-                                                │     Storage      │
-┌─────────────────┐     ┌─────────────────┐     │                 │
-│                 │     │                 │     └────────┬────────┘
-│  User Query     ├────►│  Query Engine   │              │
-│                 │     │  (retriever)    │◄─────────────┘
-        │                 │                 │
-        │                 │                 │
-        ▼                 ▼                 │
-┌──────────────────────────────────────────────────────┐
-│                                                      │
-│  Response Generation (generator.py)                 │
-│  - Formats prompt with context                      │
-│  - Calls Cohere's language model                    │
-│  - Returns natural language response                 │
-│                                                      │
-└──────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    A[Handbook PDF] -->|Parse| B[PDF Parser]
+    B -->|Extract Text| C[Text Chunks]
+    C -->|Generate Embeddings| D[Qdrant Vector DB]
+    E[User Query] -->|Process| F[Query Engine]
+    F -->|Search| D
+    D -->|Retrieve Context| F
+    F -->|Generate Response| G[Response Generation]
+    G -->|Natural Language| H[User]
 ```
 
 ### Key Components
@@ -130,28 +109,35 @@ uov_fas_handbook_bot/
    - Formats retrieved context into coherent responses
    - Uses Cohere's language model for natural-sounding answers
    - Includes source attribution for verification
-└─────────────────┘     └─────────────────┘     └────────┬────────┘
-                                                       │
-                                                       ▼
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│                 │     │                 │     │                 │
-│  User Query     ├────►│  Query Engine   │◄────┤  Qdrant DB     │
-│  (CLI/API)      │     │  (retriever)    │     │  (Vectors +     │
-└─────────────────┘     └────────┬────────┘     │   Metadata)     │
-                                 │              └─────────────────┘
-                                 ▼
-                         ┌─────────────────┐
-                         │                 │
-                         │  CLI Bot / LLM  │
-                         │  (Response)     │
-                         └─────────────────┘
+
+### Data Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant App as Web/CLI App
+    participant QueryEngine
+    participant Qdrant
+    participant LLM as Cohere LLM
+
+    User->>App: Asks question
+    App->>QueryEngine: Process query
+    QueryEngine->>Qdrant: Search similar vectors
+    Qdrant-->>QueryEngine: Return top-k chunks
+    QueryEngine->>LLM: Generate response with context
+    LLM-->>QueryEngine: Generated response
+    QueryEngine-->>App: Formatted response
+    App-->>User: Display response with sources
 ```
 
-1. **Parsing** – `pdf_parser.py` extracts headings & paragraphs.
-2. **Chunking** – `chunker.py` cleans text, splits into meaningful chunks, adds metadata.
-3. **Embedding** – `embedder.py` encodes each chunk and stores **vector + payload** in Qdrant.  The collection name is `uov_fas_handbook` (see `src/embedding/config.py`).
-4. **Retrieval** – On each user question, `QueryEngine` embeds the improved query, fetches top-k similar chunks and returns them to the bot.
-5. *(Future)* **Re-ranking/LLM generation** – `reranker.py` is reserved for cross-encoder or GPT-based answer synthesis.
+### Implementation Details
+
+1. **Parsing** – `pdf_parser.py` extracts headings & paragraphs
+2. **Chunking** – `chunker.py` processes text into meaningful chunks with metadata
+3. **Embedding** – `embedder.py` creates vector representations using `all-MiniLM-L6-v2`
+4. **Storage** – Vectors and metadata stored in Qdrant collection `uov_fas_handbook`
+5. **Retrieval** – `QueryEngine` handles semantic search and response generation
+6. **Generation** – Uses Cohere's API for natural language responses
 ---
 
 ## 🚀 Getting Started
