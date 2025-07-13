@@ -2,7 +2,7 @@
 
 A Retrieval-Augmented Generation (RAG) assistant that answers academic questions about programmes, regulations, and courses offered by the Faculty of Applied Science (FAS), University of Vavuniya. This AI-powered assistant provides instant, accurate responses by combining semantic search with large language models.
 
-![Demo](https://img.shields.io/badge/Demo-Available-success) [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+![Demo](https://img.shields.io/badge/Demo-Available-success) [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/) [![Web Interface](https://img.shields.io/badge/Web-Interface-blue)](http://localhost:5000) [![CLI](https://img.shields.io/badge/CLI-Interface-green)](https://github.com/yourusername/uov-fas-handbook-bot#-command-line-interface-cli)
 
 ## 📋 Current Status (Last Updated: July 2025)
 
@@ -10,16 +10,16 @@ A Retrieval-Augmented Generation (RAG) assistant that answers academic questions
 - **Document Processing**: PDF parsing and text extraction
 - **Vector Database**: Local Qdrant instance for efficient semantic search
 - **API Integration**: Cohere for response generation
-- **Web Interface**: Simple Flask-based web UI
+- **Dual Interface**:
+  - 🌐 **Web Interface**: Interactive Flask-based web UI with markdown support
+  - 💻 **CLI**: Command-line interface for quick queries
+- **Content Coverage**: 
+  - ✅ **Bio Science Department**: Fully processed and available
+  - 🚧 **Physical Science Department**: In progress
 
 ### ⚠️ Known Limitations
-- **Content Coverage**: 
-  - ✅ **Bio Science Department**: Most content has been processed and is available
-  - 🚧 **Physical Science Department**:  Not yet processed
-
-- **Response Quality**: 
-  - Responses may vary in quality based on the available context
-  - Some specific queries might return incomplete or generic responses
+- Response quality depends on the available context in the handbook
+- Some specific queries might return incomplete or generic responses
 
 ### 🔄 Update Process
 - Existing issues will identify and fix with the time 
@@ -48,31 +48,38 @@ A Retrieval-Augmented Generation (RAG) assistant that answers academic questions
 
 ```
 uov_fas_handbook_bot/
+├── app.py                    # Flask web application
+├── routes.py                 # Web application routes
+├── query_handbook.py         # CLI interface
+├── configs/                  # Configuration files
 ├── data/
 │   ├── raw/                  # Original PDF documents
 │   ├── processed/            # Parsed and structured JSON
 │   └── chunks/               # Pre-processed text chunks
-├── database/qdrant/          # Vector database storage
-├── src/
-│   ├── preprocessing/        # Document processing
-│   │   ├── pdf_parser.py     # PDF to structured data
-│   │   └── chunker.py        # Text segmentation
-│   │
-│   ├── embedding/            # Text embedding components
-│   │   ├── embedder.py       # Document embedding logic
-│   │   └── qdrant_singleton.py
-│   │
-│   ├── retrieval/            # Search and retrieval
-│   │   ├── retriever.py      # Query processing
-│   │   └── reranker.py       # Result re-ranking
-│   │
-│   └── generation/           # Response generation
-│       ├── generator.py      # Response generation logic
-│       └── nlp.py            # NLP utilities
-│
-├── query_handbook.py         # CLI interface
-├── requirements.txt          # Python dependencies
-└── README.md                 # This file
+├── database/
+│   └── qdrant/               # Vector database storage
+├── static/                   # Web static files
+│   ├── css/                  # Stylesheets
+│   ├── js/                   # JavaScript files
+│   └── images/               # Image assets
+├── templates/                # HTML templates
+│   └── index.html            # Main web interface
+└── src/
+    ├── preprocessing/        # Document processing
+    │   ├── pdf_parser.py     # PDF to structured data
+    │   └── chunker.py        # Text segmentation
+    │
+    ├── embedding/            # Text embedding components
+    │   ├── embedder.py       # Document embedding logic
+    │   └── qdrant_singleton.py
+    │
+    ├── retrieval/            # Search and retrieval
+    │   ├── retriever.py      # Query processing
+    │   └── reranker.py       # Result re-ranking
+    │
+    └── generation/           # Response generation
+        ├── generator.py      # Response generation logic
+        └── nlp.py            # NLP utilities
 ```
 
 ---
@@ -156,38 +163,54 @@ sequenceDiagram
    cd uov-fas-handbook-bot
    ```
 
-2. Create and activate a virtual environment:
+2. **Set Up Virtual Environment**
    ```bash
    python -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
 
-3. Install dependencies:
+3. **Install Dependencies**
    ```bash
    pip install -r requirements.txt
    ```
 
-4. Set up environment variables:
+4. **Configure Environment**
    ```bash
    cp .env.example .env
-   # Edit .env with your Cohere API key
+   # Edit .env with your API keys and configuration
    ```
 
-### Usage
+## 🌐 Web Interface
 
-#### Command Line Interface
-```bash
-python query_handbook.py
-```
+1. **Start the Web Server**
+   ```bash
+   python app.py
+   ```
+   The server will start on port 5000 by default.
 
-or programmatically:
-```python
-from src.retrieval.retriever import QueryEngine
-engine = QueryEngine()
-print(engine.search('Subjects in IT degree', top_k=3))
-```
+2. **Access the Application**
+   Open your browser to [http://localhost:5000](http://localhost:5000)
+   - Type your question in the input field
+   - Press Enter or click the send button
+   - View the response with formatted markdown
 
----
+## 💻 Command Line Interface (CLI)
+
+1. **Run a Single Query**
+   ```bash
+   python query_handbook.py "Your question here"
+   ```
+   Example:
+   ```bash
+   python query_handbook.py "What are the requirements for the IT degree?"
+   ```
+
+2. **Interactive Mode**
+   ```bash
+   python query_handbook.py --interactive
+   ```
+   - Type your questions one by one
+   - Type 'exit' or 'quit' to end the session
 
 ## 🔧  Configuration
 Edit `src/embedding/config.py` to tweak:
