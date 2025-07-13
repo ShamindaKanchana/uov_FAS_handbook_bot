@@ -11,10 +11,15 @@ document.addEventListener('DOMContentLoaded', function() {
         const messageDiv = document.createElement('div');
         messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
         
-        // Create message content
+        // Create message content with markdown support
         const messageContent = document.createElement('div');
         messageContent.className = 'message-content';
-        messageContent.textContent = content;
+        // Sanitize and render markdown
+        messageContent.innerHTML = DOMPurify.sanitize(marked.parse(content || ''), {
+            ALLOWED_TAGS: ['p', 'strong', 'em', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'code', 'pre', 'hr', 'br', 'img'],
+            ALLOWED_ATTR: ['src', 'alt', 'class', 'style'],
+            ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|ftp|tel|data):|[^a-z]|[a-z+.-]+(?:[^a-z+.:-]|$))/i
+        });
         
         // Add sources if available
         if (sources && sources.length > 0) {

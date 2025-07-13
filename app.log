@@ -194,3 +194,162 @@ NameError: name 'cohere_client' is not defined
 2025-07-13 01:59:24,451 - routes - INFO - Found 3 relevant results
 2025-07-13 01:59:26,010 - httpx - INFO - HTTP Request: POST https://api.cohere.com/v2/chat "HTTP/1.1 200 OK"
 2025-07-13 01:59:26,015 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 01:59:26] "POST /api/ask HTTP/1.1" 200 -
+2025-07-13 08:23:34,522 - src.embedding.qdrant_singleton - INFO - Initializing Qdrant client at: /home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/qdrant_handbook
+2025-07-13 08:23:34,552 - src.embedding.qdrant_singleton - INFO - Qdrant client initialized successfully
+2025-07-13 08:23:34,756 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-07-13 08:23:34,756 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-07-13 08:24:05,627 - src.retrieval.retriever - INFO - Connected to Qdrant collection: handbook_chunks at /home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/qdrant_handbook
+2025-07-13 08:24:05,627 - __main__ - INFO - Successfully initialized QueryEngine with Qdrant client
+2025-07-13 08:24:05,660 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.194.221.232:5000
+2025-07-13 08:24:05,660 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-13 08:28:38,912 - werkzeug - INFO - 10.194.221.232 - - [13/Jul/2025 08:28:38] "GET / HTTP/1.1" 200 -
+2025-07-13 08:28:39,843 - werkzeug - INFO - 10.194.221.232 - - [13/Jul/2025 08:28:39] "GET /static/js/main.js HTTP/1.1" 200 -
+2025-07-13 08:28:39,884 - werkzeug - INFO - 10.194.221.232 - - [13/Jul/2025 08:28:39] "GET /static/css/style.css HTTP/1.1" 200 -
+2025-07-13 08:28:40,009 - werkzeug - INFO - 10.194.221.232 - - [13/Jul/2025 08:28:40] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-07-13 08:29:15,393 - src.embedding.qdrant_singleton - INFO - Received signal 2, cleaning up...
+2025-07-13 08:29:15,394 - src.embedding.qdrant_singleton - INFO - Closing Qdrant client...
+2025-07-13 08:29:15,394 - src.embedding.qdrant_singleton - INFO - Qdrant client closed successfully.
+2025-07-13 08:29:15,489 - src.embedding.qdrant_singleton - INFO - Removed lock file: /home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/qdrant_handbook/.lock
+2025-07-13 08:31:16,544 - src.embedding.qdrant_singleton - INFO - Initializing Qdrant client at: /home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/qdrant_handbook
+2025-07-13 08:31:16,882 - src.embedding.qdrant_singleton - INFO - Qdrant client initialized successfully
+2025-07-13 08:31:16,884 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-07-13 08:31:16,884 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-07-13 08:31:24,134 - src.retrieval.retriever - INFO - Connected to Qdrant collection: handbook_chunks at /home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/qdrant_handbook
+2025-07-13 08:31:24,134 - __main__ - INFO - Successfully initialized QueryEngine with Qdrant client
+2025-07-13 08:31:24,145 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.194.221.232:5000
+2025-07-13 08:31:24,145 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-13 08:32:45,156 - werkzeug - INFO - 10.194.221.232 - - [13/Jul/2025 08:32:45] "GET / HTTP/1.1" 200 -
+2025-07-13 08:32:45,215 - werkzeug - INFO - 10.194.221.232 - - [13/Jul/2025 08:32:45] "[36mGET /static/css/style.css HTTP/1.1[0m" 304 -
+2025-07-13 08:32:45,216 - werkzeug - INFO - 10.194.221.232 - - [13/Jul/2025 08:32:45] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+2025-07-13 08:33:13,544 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 08:33:13] "GET / HTTP/1.1" 200 -
+2025-07-13 08:33:13,820 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 08:33:13] "[36mGET /static/css/style.css HTTP/1.1[0m" 304 -
+2025-07-13 08:33:13,895 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 08:33:13] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+2025-07-13 08:34:03,490 - routes - INFO - Processing query: I want to know how calculate GPA
+2025-07-13 08:34:03,490 - src.retrieval.retriever - INFO - Searching for: 'i want to know how calculate gpa'
+2025-07-13 08:34:06,405 - src.retrieval.retriever - INFO - Returning 3 processed results
+2025-07-13 08:34:06,405 - routes - INFO - Found 3 relevant results
+2025-07-13 08:34:09,936 - httpx - INFO - HTTP Request: POST https://api.cohere.com/v2/chat "HTTP/1.1 200 OK"
+2025-07-13 08:34:10,039 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 08:34:10] "POST /api/ask HTTP/1.1" 200 -
+2025-07-13 08:34:41,095 - routes - INFO - Processing query: I want to know how obtain diploma
+2025-07-13 08:34:41,096 - src.retrieval.retriever - INFO - Searching for: 'i want to know how obtain diploma'
+2025-07-13 08:34:41,182 - src.retrieval.retriever - INFO - Returning 3 processed results
+2025-07-13 08:34:41,183 - routes - INFO - Found 3 relevant results
+2025-07-13 08:34:43,104 - httpx - INFO - HTTP Request: POST https://api.cohere.com/v2/chat "HTTP/1.1 200 OK"
+2025-07-13 08:34:43,112 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 08:34:43] "POST /api/ask HTTP/1.1" 200 -
+2025-07-13 08:35:47,345 - routes - INFO - Processing query: I want to know minimum GPA to obtain ENvironmental Science degree
+2025-07-13 08:35:47,346 - src.retrieval.retriever - INFO - Searching for: 'i want to know minimum gpa to obtain environmental science degree'
+2025-07-13 08:35:47,449 - src.retrieval.retriever - INFO - Returning 3 processed results
+2025-07-13 08:35:47,449 - routes - INFO - Found 3 relevant results
+2025-07-13 08:35:48,830 - httpx - INFO - HTTP Request: POST https://api.cohere.com/v2/chat "HTTP/1.1 200 OK"
+2025-07-13 08:35:48,843 - werkzeug - INFO - 10.194.221.232 - - [13/Jul/2025 08:35:48] "POST /api/ask HTTP/1.1" 200 -
+2025-07-13 08:51:30,247 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 08:51:30] "GET / HTTP/1.1" 200 -
+2025-07-13 08:51:30,296 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 08:51:30] "GET /static/css/style.css HTTP/1.1" 200 -
+2025-07-13 08:51:30,298 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 08:51:30] "GET /static/js/main.js HTTP/1.1" 200 -
+2025-07-13 08:51:57,210 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 08:51:57] "GET / HTTP/1.1" 200 -
+2025-07-13 08:51:57,281 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 08:51:57] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+2025-07-13 08:51:57,287 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 08:51:57] "[36mGET /static/css/style.css HTTP/1.1[0m" 304 -
+2025-07-13 08:52:16,263 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 08:52:16] "GET / HTTP/1.1" 200 -
+2025-07-13 08:52:16,405 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 08:52:16] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+2025-07-13 08:52:16,411 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 08:52:16] "[36mGET /static/css/style.css HTTP/1.1[0m" 304 -
+2025-07-13 08:52:42,498 - src.embedding.qdrant_singleton - INFO - Received signal 2, cleaning up...
+2025-07-13 08:52:42,499 - src.embedding.qdrant_singleton - INFO - Closing Qdrant client...
+2025-07-13 08:52:42,500 - src.embedding.qdrant_singleton - INFO - Qdrant client closed successfully.
+2025-07-13 08:52:42,605 - src.embedding.qdrant_singleton - INFO - Removed lock file: /home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/qdrant_handbook/.lock
+2025-07-13 08:52:58,958 - src.embedding.qdrant_singleton - INFO - Initializing Qdrant client at: /home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/qdrant_handbook
+2025-07-13 08:52:59,014 - src.embedding.qdrant_singleton - INFO - Qdrant client initialized successfully
+2025-07-13 08:52:59,016 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-07-13 08:52:59,016 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-07-13 08:53:07,182 - src.retrieval.retriever - INFO - Connected to Qdrant collection: handbook_chunks at /home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/qdrant_handbook
+2025-07-13 08:53:07,182 - __main__ - INFO - Successfully initialized QueryEngine with Qdrant client
+2025-07-13 08:53:07,219 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.194.221.232:5000
+2025-07-13 08:53:07,219 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-13 08:53:22,370 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 08:53:22] "GET / HTTP/1.1" 200 -
+2025-07-13 08:53:22,558 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 08:53:22] "[36mGET /static/css/style.css HTTP/1.1[0m" 304 -
+2025-07-13 08:53:22,562 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 08:53:22] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+2025-07-13 08:53:47,600 - routes - INFO - Processing query: I want to know how calculate GPA for environmental science degree
+2025-07-13 08:53:47,600 - src.retrieval.retriever - INFO - Searching for: 'i want to know how calculate gpa for environmental science degree'
+2025-07-13 08:53:47,671 - src.retrieval.retriever - INFO - Returning 3 processed results
+2025-07-13 08:53:47,671 - routes - INFO - Found 3 relevant results
+2025-07-13 08:53:51,462 - httpx - INFO - HTTP Request: POST https://api.cohere.com/v2/chat "HTTP/1.1 200 OK"
+2025-07-13 08:53:51,474 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 08:53:51] "POST /api/ask HTTP/1.1" 200 -
+2025-07-13 08:55:02,952 - routes - INFO - Processing query: Steps to get higher diploma in environmental science
+2025-07-13 08:55:02,952 - src.retrieval.retriever - INFO - Searching for: 'steps to get higher diploma in environmental science'
+2025-07-13 08:55:03,086 - src.retrieval.retriever - INFO - Returning 3 processed results
+2025-07-13 08:55:03,086 - routes - INFO - Found 3 relevant results
+2025-07-13 08:55:05,795 - httpx - INFO - HTTP Request: POST https://api.cohere.com/v2/chat "HTTP/1.1 200 OK"
+2025-07-13 08:55:05,802 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 08:55:05] "POST /api/ask HTTP/1.1" 200 -
+2025-07-13 08:56:26,679 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 08:56:26] "GET / HTTP/1.1" 200 -
+2025-07-13 08:56:26,792 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 08:56:26] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+2025-07-13 08:56:26,803 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 08:56:26] "GET /static/css/style.css HTTP/1.1" 200 -
+2025-07-13 08:56:35,651 - routes - INFO - Processing query: I want to know how calculate GPA
+2025-07-13 08:56:35,651 - src.retrieval.retriever - INFO - Searching for: 'i want to know how calculate gpa'
+2025-07-13 08:56:35,705 - src.retrieval.retriever - INFO - Returning 3 processed results
+2025-07-13 08:56:35,706 - routes - INFO - Found 3 relevant results
+2025-07-13 08:56:37,330 - httpx - INFO - HTTP Request: POST https://api.cohere.com/v2/chat "HTTP/1.1 200 OK"
+2025-07-13 08:56:37,342 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 08:56:37] "POST /api/ask HTTP/1.1" 200 -
+2025-07-13 08:56:59,132 - routes - INFO - Processing query: what are the subjects included in Level 1 in Environmental Science Degree
+2025-07-13 08:56:59,132 - src.retrieval.retriever - INFO - Searching for: 'what are the subjects included in level 1 in environmental science degree'
+2025-07-13 08:56:59,315 - src.retrieval.retriever - INFO - Returning 3 processed results
+2025-07-13 08:56:59,316 - routes - INFO - Found 3 relevant results
+2025-07-13 08:57:00,982 - httpx - INFO - HTTP Request: POST https://api.cohere.com/v2/chat "HTTP/1.1 200 OK"
+2025-07-13 08:57:00,990 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 08:57:00] "POST /api/ask HTTP/1.1" 200 -
+2025-07-13 08:58:22,132 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 08:58:22] "GET / HTTP/1.1" 200 -
+2025-07-13 08:58:22,219 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 08:58:22] "GET /static/css/style.css HTTP/1.1" 200 -
+2025-07-13 08:58:22,234 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 08:58:22] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+2025-07-13 08:58:32,955 - routes - INFO - Processing query: what are the subjects included in Level2  in Environmental Science Degree
+2025-07-13 08:58:32,956 - src.retrieval.retriever - INFO - Searching for: 'what are the subjects included in level2 in environmental science degree'
+2025-07-13 08:58:33,002 - src.retrieval.retriever - INFO - Returning 3 processed results
+2025-07-13 08:58:33,003 - routes - INFO - Found 3 relevant results
+2025-07-13 08:58:34,669 - httpx - INFO - HTTP Request: POST https://api.cohere.com/v2/chat "HTTP/1.1 200 OK"
+2025-07-13 08:58:34,675 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 08:58:34] "POST /api/ask HTTP/1.1" 200 -
+2025-07-13 08:58:46,271 - routes - INFO - Processing query: what are the subjects included in Level 1 in Environmental Science Degree
+2025-07-13 08:58:46,271 - src.retrieval.retriever - INFO - Searching for: 'what are the subjects included in level 1 in environmental science degree'
+2025-07-13 08:58:46,333 - src.retrieval.retriever - INFO - Returning 3 processed results
+2025-07-13 08:58:46,333 - routes - INFO - Found 3 relevant results
+2025-07-13 08:58:48,714 - httpx - INFO - HTTP Request: POST https://api.cohere.com/v2/chat "HTTP/1.1 200 OK"
+2025-07-13 08:58:48,722 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 08:58:48] "POST /api/ask HTTP/1.1" 200 -
+2025-07-13 08:59:37,470 - routes - INFO - Processing query: I want to know how apply for medical in the exam?
+2025-07-13 08:59:37,470 - src.retrieval.retriever - INFO - Searching for: 'i want to know how apply for medical in the exam?'
+2025-07-13 08:59:37,647 - src.retrieval.retriever - INFO - Returning 3 processed results
+2025-07-13 08:59:37,648 - routes - INFO - Found 3 relevant results
+2025-07-13 08:59:40,096 - httpx - INFO - HTTP Request: POST https://api.cohere.com/v2/chat "HTTP/1.1 200 OK"
+2025-07-13 08:59:40,102 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 08:59:40] "POST /api/ask HTTP/1.1" 200 -
+2025-07-13 09:03:11,685 - src.embedding.qdrant_singleton - INFO - Received signal 2, cleaning up...
+2025-07-13 09:03:11,685 - src.embedding.qdrant_singleton - INFO - Closing Qdrant client...
+2025-07-13 09:03:11,686 - src.embedding.qdrant_singleton - INFO - Qdrant client closed successfully.
+2025-07-13 09:03:11,687 - src.embedding.qdrant_singleton - INFO - Removed lock file: /home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/qdrant_handbook/.lock
+2025-07-13 09:03:23,632 - src.embedding.qdrant_singleton - INFO - Initializing Qdrant client at: /home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/qdrant_handbook
+2025-07-13 09:03:23,651 - src.embedding.qdrant_singleton - INFO - Qdrant client initialized successfully
+2025-07-13 09:03:23,653 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-07-13 09:03:23,653 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-07-13 09:03:31,767 - src.retrieval.retriever - INFO - Connected to Qdrant collection: handbook_chunks at /home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/qdrant_handbook
+2025-07-13 09:03:31,767 - __main__ - INFO - Successfully initialized QueryEngine with Qdrant client
+2025-07-13 09:03:31,778 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.194.221.232:5000
+2025-07-13 09:03:31,778 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-13 09:03:44,327 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 09:03:44] "GET / HTTP/1.1" 200 -
+2025-07-13 09:03:45,580 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 09:03:45] "[36mGET /static/css/style.css HTTP/1.1[0m" 304 -
+2025-07-13 09:03:45,581 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 09:03:45] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+2025-07-13 09:04:09,928 - routes - INFO - Processing query: I want to know Level 1 subjects in ENvironmental Sciencce
+2025-07-13 09:04:09,928 - src.retrieval.retriever - INFO - Searching for: 'i want to know level 1 subjects in environmental sciencce'
+2025-07-13 09:04:10,150 - src.retrieval.retriever - INFO - Returning 3 processed results
+2025-07-13 09:04:10,151 - routes - INFO - Found 3 relevant results
+2025-07-13 09:04:12,943 - httpx - INFO - HTTP Request: POST https://api.cohere.com/v2/chat "HTTP/1.1 200 OK"
+2025-07-13 09:04:12,954 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 09:04:12] "POST /api/ask HTTP/1.1" 200 -
+2025-07-13 09:04:36,688 - routes - INFO - Processing query: I want to know Level 1 modules in ENvironmental Science
+2025-07-13 09:04:36,688 - src.retrieval.retriever - INFO - Searching for: 'i want to know level 1 modules in environmental science'
+2025-07-13 09:04:36,739 - src.retrieval.retriever - INFO - Returning 3 processed results
+2025-07-13 09:04:36,740 - routes - INFO - Found 3 relevant results
+2025-07-13 09:04:38,452 - httpx - INFO - HTTP Request: POST https://api.cohere.com/v2/chat "HTTP/1.1 200 OK"
+2025-07-13 09:04:38,458 - werkzeug - INFO - 127.0.0.1 - - [13/Jul/2025 09:04:38] "POST /api/ask HTTP/1.1" 200 -
