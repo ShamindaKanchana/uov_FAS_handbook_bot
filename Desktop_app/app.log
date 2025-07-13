@@ -1,0 +1,29 @@
+2025-07-13 20:07:12,059 - uov_handbook - CRITICAL - Application error: name 'Qt' is not defined
+Traceback (most recent call last):
+  File "/home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/Desktop_app/main.py", line 50, in main
+    app.setAttribute(Qt.ApplicationAttribute.AA_UseHighDpiPixmaps, True)
+                     ^^
+NameError: name 'Qt' is not defined
+2025-07-13 20:07:54,593 - uov_handbook - CRITICAL - Application error: type object 'ApplicationAttribute' has no attribute 'AA_UseHighDpiPixmaps'
+Traceback (most recent call last):
+  File "/home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/Desktop_app/main.py", line 50, in main
+    app.setAttribute(Qt.ApplicationAttribute.AA_UseHighDpiPixmaps, True)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: type object 'ApplicationAttribute' has no attribute 'AA_UseHighDpiPixmaps'
+2025-07-13 20:08:25,882 - uov_handbook - CRITICAL - Application error: type object 'Qt' has no attribute 'AA_UseHighDpiPixmaps'
+Traceback (most recent call last):
+  File "/home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/Desktop_app/main.py", line 50, in main
+    app.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+                     ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: type object 'Qt' has no attribute 'AA_UseHighDpiPixmaps'
+2025-07-13 20:09:22,013 - uov_handbook - CRITICAL - Application error: 'QTextDocument' object has no attribute 'setDefaultStyle'
+Traceback (most recent call last):
+  File "/home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/Desktop_app/main.py", line 68, in main
+    main_window = MainWindow()
+                  ^^^^^^^^^^^^
+  File "/home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/Desktop_app/app/ui/main_window.py", line 31, in __init__
+    self._setup_chat_area()
+  File "/home/shaminda/Documents/My_Projects/uov_FAS_handbook_bot/Desktop_app/app/ui/main_window.py", line 44, in _setup_chat_area
+    self.chat_document.setDefaultStyle("""
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QTextDocument' object has no attribute 'setDefaultStyle'. Did you mean: 'setDefaultFont'?

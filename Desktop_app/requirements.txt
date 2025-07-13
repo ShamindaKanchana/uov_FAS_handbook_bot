@@ -1,0 +1,6 @@
+PyQt6>=6.4.0
+sentence-transformers>=2.2.2
+qdrant-client>=1.6.0
+numpy>=1.21.0
+python-dotenv>=0.21.0
+pyinstaller>=5.0.0  # For packaging the application
